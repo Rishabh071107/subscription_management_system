@@ -16,6 +16,7 @@ import subscriptionRoutes from './modules/subscriptions/subscriptions.routes.js'
 import invoiceRoutes from './modules/invoices/invoices.routes.js';
 import billingRoutes from './modules/billing/billing.routes.js';
 import paymentRoutes from './modules/payments/payments.routes.js';
+import overdueRoutes from './modules/overdue/overdue.routes.js';
 import discountRoutes from './modules/discounts/discounts.routes.js';
 import dashboardRoutes from './modules/dashboard/dashboard.routes.js';
 
@@ -65,6 +66,8 @@ app.use('/api/billing', billingRoutes);
 app.use('/api/v1/billing', billingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/v1/payments', paymentRoutes);
+app.use('/api/overdue', overdueRoutes);
+app.use('/api/v1/overdue', overdueRoutes);
 app.use('/api/discounts', discountRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
