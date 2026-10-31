@@ -23,6 +23,7 @@ export default function Sidebar({
       </div>
 
       <nav className="internal-sidebar-nav">
+        {/* Overview */}
         <div className="internal-nav-section-title">Overview</div>
         {isAdmin && (
           <NavLink
@@ -36,6 +37,7 @@ export default function Sidebar({
           </NavLink>
         )}
 
+        {/* Catalog & Subscriptions */}
         <div className="internal-nav-section-title">Catalog & Subscriptions</div>
         {(isAdmin || isStaff) && (
           <>
@@ -48,6 +50,7 @@ export default function Sidebar({
               <span className="nav-icon">📦</span>
               <span>Products & Services</span>
             </NavLink>
+
             <NavLink
               to="/plans"
               className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
@@ -57,9 +60,30 @@ export default function Sidebar({
               <span className="nav-icon">📋</span>
               <span>Subscription Plans</span>
             </NavLink>
+
+            <NavLink
+              to="/subscriptions"
+              className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
+              onClick={onClose}
+              title="Subscriptions"
+            >
+              <span className="nav-icon">📆</span>
+              <span>Subscriptions</span>
+            </NavLink>
+
+            <NavLink
+              to="/quotations"
+              className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
+              onClick={onClose}
+              title="Quotations"
+            >
+              <span className="nav-icon">🧾</span>
+              <span>Quotations</span>
+            </NavLink>
           </>
         )}
 
+        {/* User Management */}
         <div className="internal-nav-section-title">User Management</div>
         {isAdmin && (
           <NavLink
@@ -85,6 +109,7 @@ export default function Sidebar({
           </NavLink>
         )}
 
+        {/* Billing & Operations */}
         <div className="internal-nav-section-title">Billing & Operations</div>
         {isAdmin && (
           <NavLink
@@ -99,41 +124,40 @@ export default function Sidebar({
         )}
 
         {(isAdmin || isStaff) && (
-          <NavLink
-            to="/invoices"
-            className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
-            onClick={onClose}
-            title="Invoices"
-          >
-            <span className="nav-icon">📄</span>
-            <span>Invoices</span>
-          </NavLink>
+          <>
+            <NavLink
+              to="/invoices"
+              className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
+              onClick={onClose}
+              title="Invoices"
+            >
+              <span className="nav-icon">📄</span>
+              <span>Invoices</span>
+            </NavLink>
+
+            <NavLink
+              to="/payments"
+              className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
+              onClick={onClose}
+              title="Payments"
+            >
+              <span className="nav-icon">💳</span>
+              <span>Payments</span>
+            </NavLink>
+
+            <NavLink
+              to="/overdue"
+              className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
+              onClick={onClose}
+              title="Collections & Overdue"
+            >
+              <span className="nav-icon">⚠️</span>
+              <span>Overdue & Collections</span>
+            </NavLink>
+          </>
         )}
 
-        {(isAdmin || isStaff) && (
-          <NavLink
-            to="/payments"
-            className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
-            onClick={onClose}
-            title="Payments"
-          >
-            <span className="nav-icon">💳</span>
-            <span>Payments</span>
-          </NavLink>
-        )}
-
-        {(isAdmin || isStaff) && (
-          <NavLink
-            to="/overdue"
-            className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
-            onClick={onClose}
-            title="Collections & Overdue"
-          >
-            <span className="nav-icon">⚠️</span>
-            <span>Overdue & Collections</span>
-          </NavLink>
-        )}
-
+        {/* Settings & Account */}
         <div className="internal-nav-section-title">Settings & Account</div>
         <NavLink
           to="/profile"

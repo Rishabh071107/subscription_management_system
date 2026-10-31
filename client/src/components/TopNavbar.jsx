@@ -100,6 +100,25 @@ export default function TopNavbar({
               <span>📋</span>
               <span>Plans</span>
             </NavLink>
+            <NavLink
+              to="/subscriptions"
+              style={({ isActive }) => ({
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                fontSize: '13px',
+                fontWeight: 600,
+                textDecoration: 'none',
+                background: isActive ? '#714B67' : 'transparent',
+                color: isActive ? '#ffffff' : '#475569',
+                transition: 'all 0.15s ease'
+              })}
+            >
+              <span className="nav-icon">📆</span>
+              <span>Subscriptions</span>
+            </NavLink>
 
             <NavLink
               to="/customers"
