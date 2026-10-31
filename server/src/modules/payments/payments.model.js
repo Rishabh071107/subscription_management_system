@@ -1,6 +1,14 @@
 import prisma from '../../config/db.js';
 
-export const findPayments = async ({ skip = 0, take = 10, customerId, invoiceId, paymentMethod }) => {
+export const findPayments = async ({
+  skip = 0,
+  take = 10,
+  customerId,
+  invoiceId,
+  paymentMethod,
+  startDate,
+  endDate
+}) => {
   const where = {};
 
   if (customerId) {
@@ -15,6 +23,16 @@ export const findPayments = async ({ skip = 0, take = 10, customerId, invoiceId,
     where.paymentMethod = paymentMethod;
   }
 
+  if (startDate || endDate) {
+    where.paymentDate = {};
+    if (startDate) {
+      where.paymentDate.gte = new Date(startDate);
+    }
+    if (endDate) {
+      where.paymentDate.lte = new Date(endDate);
+    }
+  }
+
   const [total, payments] = await Promise.all([
     prisma.payment.count({ where }),
     prisma.payment.findMany({
@@ -27,10 +45,10 @@ export const findPayments = async ({ skip = 0, take = 10, customerId, invoiceId,
           select: { id: true, firstName: true, lastName: true, email: true }
         },
         invoice: {
-          select: { id: true, invoiceNumber: true, total: true, status: true }
+          select: { id: true, invoiceNumber: true, total: true, amountPaid: true, outstandingAmount: true, status: true, dueDate: true }
         },
         recordedBy: {
-          select: { id: true, firstName: true, lastName: true }
+          select: { id: true, firstName: true, lastName: true, email: true }
         }
       }
     })
@@ -43,9 +61,33 @@ export const findPaymentById = async (id) => {
   return prisma.payment.findUnique({
     where: { id },
     include: {
-      customer: true,
-      invoice: true,
-      recordedBy: true
+      customer: {
+        select: { id: true, firstName: true, lastName: true, email: true }
+      },
+      invoice: {
+        select: { id: true, invoiceNumber: true, total: true, amountPaid: true, outstandingAmount: true, status: true, dueDate: true, issueDate: true }
+      },
+      recordedBy: {
+        select: { id: true, firstName: true, lastName: true, email: true }
+      }
+    }
+  });
+};
+
+export const findPaymentsByInvoiceId = async (invoiceId) => {
+  return prisma.payment.findMany({
+    where: { invoiceId },
+    orderBy: { paymentDate: 'desc' },
+    include: {
+      customer: {
+        select: { id: true, firstName: true, lastName: true, email: true }
+      },
+      invoice: {
+        select: { id: true, invoiceNumber: true, total: true, amountPaid: true, outstandingAmount: true, status: true }
+      },
+      recordedBy: {
+        select: { id: true, firstName: true, lastName: true, email: true }
+      }
     }
   });
 };

@@ -7,12 +7,19 @@ const router = Router();
 
 router.use(authenticate);
 
-// Role-aware dashboard summary (Admin, Staff, Customer all get their tailored metrics)
+// Financial KPI summary (Role-aware: Admin, Staff, Customer)
 router.get('/summary', DashboardController.getSummary);
 
-// Reports: Admin & Staff
+// Reports & Analytics: Admin & Staff
+router.get('/revenue', authorize('ADMIN', 'STAFF'), DashboardController.getRevenueReport);
+router.get('/subscriptions', authorize('ADMIN', 'STAFF'), DashboardController.getSubscriptionReport);
+router.get('/payments', authorize('ADMIN', 'STAFF'), DashboardController.getPaymentsSummary);
+router.get('/overdue', authorize('ADMIN', 'STAFF'), DashboardController.getOverdueReport);
+
+// Backward-compatibility aliases for /reports/*
 router.get('/reports/revenue', authorize('ADMIN', 'STAFF'), DashboardController.getRevenueReport);
 router.get('/reports/subscriptions', authorize('ADMIN', 'STAFF'), DashboardController.getSubscriptionReport);
+router.get('/reports/payments', authorize('ADMIN', 'STAFF'), DashboardController.getPaymentsSummary);
 router.get('/reports/overdue', authorize('ADMIN', 'STAFF'), DashboardController.getOverdueReport);
 
 export default router;

@@ -26,6 +26,12 @@ import AdminDashboard from './modules/dashboard/AdminDashboard.jsx';
 import UserList from './modules/users/UserList.jsx';
 import ProfilePage from './modules/profile/ProfilePage.jsx';
 import SettingsPage from './modules/settings/SettingsPage.jsx';
+import InvoiceList from './modules/invoices/InvoiceList.jsx';
+import InvoiceDetail from './modules/invoices/InvoiceDetail.jsx';
+import BillingRunsList from './modules/billing/BillingRunsList.jsx';
+import BillingRunDetail from './modules/billing/BillingRunDetail.jsx';
+import PaymentList from './modules/payments/PaymentList.jsx';
+import OverdueList from './modules/overdue/OverdueList.jsx';
 
 // Customer Portal Pages
 import CustomerDashboard from './modules/dashboard/CustomerDashboard.jsx';
@@ -61,6 +67,8 @@ export default function App() {
               <Route element={<InternalLayout />}>
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/staff" element={<UserList roleFilter="STAFF" />} />
+                <Route path="/admin/billing" element={<BillingRunsList />} />
+                <Route path="/admin/billing/:id" element={<BillingRunDetail />} />
                 <Route path="/settings" element={<SettingsPage />} />
               </Route>
             </Route>
@@ -69,6 +77,10 @@ export default function App() {
             <Route element={<InternalRoute />}>
               <Route element={<InternalLayout />}>
                 <Route path="/customers" element={<UserList roleFilter="CUSTOMER" />} />
+                <Route path="/invoices" element={<InvoiceList />} />
+                <Route path="/invoices/:id" element={<InvoiceDetail />} />
+                <Route path="/payments" element={<PaymentList />} />
+                <Route path="/overdue" element={<OverdueList />} />
                 <Route path="/profile" element={<ProfilePage />} />
               </Route>
             </Route>
@@ -77,6 +89,9 @@ export default function App() {
             <Route element={<CustomerPortalRoute />}>
               <Route element={<CustomerPortalLayout />}>
                 <Route path="/portal/dashboard" element={<CustomerDashboard />} />
+                <Route path="/portal/invoices" element={<InvoiceList />} />
+                <Route path="/portal/invoices/:id" element={<InvoiceDetail />} />
+                <Route path="/portal/payments" element={<PaymentList isPortal />} />
                 <Route path="/portal/profile" element={<PortalProfilePage />} />
               </Route>
             </Route>

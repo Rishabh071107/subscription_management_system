@@ -1,25 +1,26 @@
 import * as DashboardModel from './dashboard.model.js';
 import prisma from '../../config/db.js';
 
-export const getDashboardSummary = async (currentUser) => {
+export const getDashboardSummary = async (query = {}, currentUser) => {
   if (currentUser.role === 'ADMIN') {
-    const metrics = await DashboardModel.getAdminMetrics();
-    return { role: 'ADMIN', metrics };
+    const metrics = await DashboardModel.getAdminMetrics(query);
+    return { role: 'ADMIN', metrics, ...metrics };
   }
 
   if (currentUser.role === 'STAFF') {
     const metrics = await DashboardModel.getStaffMetrics(currentUser.id);
-    return { role: 'STAFF', metrics };
+    return { role: 'STAFF', metrics, ...metrics };
   }
 
   // CUSTOMER
   const metrics = await DashboardModel.getCustomerMetrics(currentUser.id);
-  return { role: 'CUSTOMER', metrics };
+  return { role: 'CUSTOMER', metrics, ...metrics };
 };
 
-export const getRevenueReport = async ({ fromDate, toDate }) => {
-  const start = fromDate ? new Date(fromDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-  const end = toDate ? new Date(toDate) : new Date();
+export const getRevenueReport = async (query = {}) => {
+  const { fromDate, toDate, startDate, endDate } = query;
+  const start = startDate || fromDate ? new Date(startDate || fromDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const end = endDate || toDate ? new Date(endDate || toDate) : new Date();
 
   const payments = await DashboardModel.getRevenueReportData(start, end);
 
@@ -27,14 +28,14 @@ export const getRevenueReport = async ({ fromDate, toDate }) => {
   const grouped = {};
   let totalRevenue = 0;
 
-  payments.forEach(p => {
+  payments.forEach((p) => {
     const dateKey = new Date(p.paymentDate).toISOString().slice(0, 10);
     const amt = Number(p.amount);
     totalRevenue += amt;
     grouped[dateKey] = (grouped[dateKey] || 0) + amt;
   });
 
-  const timeline = Object.keys(grouped).sort().map(date => ({
+  const timeline = Object.keys(grouped).sort().map((date) => ({
     date,
     amount: Math.round(grouped[date] * 100) / 100
   }));
@@ -49,21 +50,24 @@ export const getRevenueReport = async ({ fromDate, toDate }) => {
 };
 
 export const getSubscriptionReport = async () => {
-  const { byStatus, byPlan } = await DashboardModel.getSubscriptionReportData();
+  const { byStatus, byPlan, activeCount, estimatedMrr, estimatedArr } =
+    await DashboardModel.getSubscriptionReportData();
 
   // Fetch plan names
   const plans = await prisma.plan.findMany({
     select: { id: true, name: true }
   });
   const planMap = {};
-  plans.forEach(p => { planMap[p.id] = p.name; });
+  plans.forEach((p) => {
+    planMap[p.id] = p.name;
+  });
 
-  const statusDistribution = byStatus.map(s => ({
+  const statusDistribution = byStatus.map((s) => ({
     status: s.status,
     count: s._count.id
   }));
 
-  const planDistribution = byPlan.map(p => ({
+  const planDistribution = byPlan.map((p) => ({
     planId: p.planId,
     planName: planMap[p.planId] || 'Unknown Plan',
     count: p._count.id
@@ -71,15 +75,24 @@ export const getSubscriptionReport = async () => {
 
   return {
     statusDistribution,
-    planDistribution
+    planDistribution,
+    activeCount,
+    estimatedMrr,
+    estimatedArr
   };
 };
 
+export const getPaymentsSummary = async (query = {}) => {
+  return DashboardModel.getPaymentsSummaryData(query);
+};
+
 export const getOverdueReport = async () => {
+  const now = new Date();
   const overdueInvoices = await prisma.invoice.findMany({
     where: {
-      status: { in: ['CONFIRMED', 'PARTIALLY_PAID'] },
-      dueDate: { lt: new Date() }
+      status: { notIn: ['CANCELLED', 'PAID'] },
+      dueDate: { lt: now },
+      outstandingAmount: { gt: 0 }
     },
     include: {
       customer: {
@@ -90,8 +103,8 @@ export const getOverdueReport = async () => {
   });
 
   let totalOverdue = 0;
-  overdueInvoices.forEach(inv => {
-    totalOverdue += Number(inv.outstandingAmount);
+  overdueInvoices.forEach((inv) => {
+    totalOverdue += Number(inv.outstandingAmount || 0);
   });
 
   return {

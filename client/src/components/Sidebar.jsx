@@ -61,6 +61,55 @@ export default function Sidebar({
           </NavLink>
         )}
 
+        <div className="internal-nav-section-title">Billing & Operations</div>
+        {isAdmin && (
+          <NavLink
+            to="/admin/billing"
+            className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            title="Recurring Billing Engine"
+          >
+            <span className="nav-icon">⚡</span>
+            <span>Recurring Billing</span>
+          </NavLink>
+        )}
+
+        {(isAdmin || isStaff) && (
+          <NavLink
+            to="/invoices"
+            className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            title="Invoices"
+          >
+            <span className="nav-icon">📄</span>
+            <span>Invoices</span>
+          </NavLink>
+        )}
+
+        {(isAdmin || isStaff) && (
+          <NavLink
+            to="/payments"
+            className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            title="Payments"
+          >
+            <span className="nav-icon">💳</span>
+            <span>Payments</span>
+          </NavLink>
+        )}
+
+        {(isAdmin || isStaff) && (
+          <NavLink
+            to="/overdue"
+            className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            title="Collections & Overdue"
+          >
+            <span className="nav-icon">⚠️</span>
+            <span>Overdue & Collections</span>
+          </NavLink>
+        )}
+
         <div className="internal-nav-section-title">Settings & Account</div>
         <NavLink
           to="/profile"

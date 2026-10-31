@@ -3,10 +3,26 @@ import Modal from '../../components/Modal.jsx';
 import api from '../../services/api.js';
 import { useNotification } from '../../context/NotificationContext.jsx';
 
-const RecordPaymentModal = ({ isOpen, onClose, onSaved, defaultInvoiceId = null, maxAmount = null }) => {
+const RecordPaymentModal = ({
+  isOpen = true,
+  onClose,
+  onSaved,
+  onPaymentSuccess,
+  invoice = null,
+  defaultInvoiceId = null,
+  maxAmount = null
+}) => {
   const [invoices, setInvoices] = useState([]);
-  const [selectedInvoiceId, setSelectedInvoiceId] = useState(defaultInvoiceId || '');
-  const [amount, setAmount] = useState(maxAmount ? maxAmount.toString() : '');
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState(
+    invoice?.id || defaultInvoiceId || ''
+  );
+  const [amount, setAmount] = useState(
+    invoice?.outstandingAmount !== undefined
+      ? Number(invoice.outstandingAmount).toString()
+      : maxAmount !== null
+      ? maxAmount.toString()
+      : ''
+  );
   const [paymentMethod, setPaymentMethod] = useState('BANK_TRANSFER');
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().slice(0, 10));
   const [referenceNote, setReferenceNote] = useState('');
@@ -15,21 +31,38 @@ const RecordPaymentModal = ({ isOpen, onClose, onSaved, defaultInvoiceId = null,
 
   const { success, error } = useNotification();
 
+  const activeInvoiceId = invoice?.id || defaultInvoiceId;
+  const currentMaxAmount =
+    invoice?.outstandingAmount !== undefined
+      ? Number(invoice.outstandingAmount)
+      : maxAmount;
+
   useEffect(() => {
-    if (defaultInvoiceId) {
-      setSelectedInvoiceId(defaultInvoiceId);
-      if (maxAmount) setAmount(maxAmount.toString());
+    if (activeInvoiceId) {
+      setSelectedInvoiceId(activeInvoiceId);
+      if (currentMaxAmount !== null && currentMaxAmount !== undefined) {
+        setAmount(currentMaxAmount.toString());
+      }
     } else if (isOpen) {
-      // Fetch unpaid invoices
-      api.get('/invoices?status=CONFIRMED&limit=50').then((res) => {
-        setInvoices(res.data || []);
-        if (res.data && res.data.length > 0 && !selectedInvoiceId) {
-          setSelectedInvoiceId(res.data[0].id);
-          setAmount(Number(res.data[0].outstandingAmount).toString());
-        }
-      }).catch(() => {});
+      // Fetch unpaid/partially paid invoices
+      api.get('/invoices?limit=100')
+        .then((res) => {
+          const list = Array.isArray(res.data) ? res.data : (res.data?.invoices || []);
+          const eligible = list.filter(
+            (inv) =>
+              inv.status !== 'PAID' &&
+              inv.status !== 'CANCELLED' &&
+              Number(inv.outstandingAmount) > 0
+          );
+          setInvoices(eligible);
+          if (eligible.length > 0 && !selectedInvoiceId) {
+            setSelectedInvoiceId(eligible[0].id);
+            setAmount(Number(eligible[0].outstandingAmount).toString());
+          }
+        })
+        .catch(() => {});
     }
-  }, [isOpen, defaultInvoiceId, maxAmount]);
+  }, [isOpen, activeInvoiceId, currentMaxAmount]);
 
   const handleInvoiceChange = (invId) => {
     setSelectedInvoiceId(invId);
@@ -64,7 +97,8 @@ const RecordPaymentModal = ({ isOpen, onClose, onSaved, defaultInvoiceId = null,
         transactionId
       });
       success('Payment recorded successfully');
-      onSaved();
+      if (typeof onSaved === 'function') onSaved();
+      if (typeof onPaymentSuccess === 'function') onPaymentSuccess();
       onClose();
     } catch (err) {
       error(err.message || 'Failed to record payment');
@@ -76,7 +110,7 @@ const RecordPaymentModal = ({ isOpen, onClose, onSaved, defaultInvoiceId = null,
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Record Customer Payment">
       <form onSubmit={handleSubmit}>
-        {!defaultInvoiceId && (
+        {!activeInvoiceId && (
           <div className="form-group">
             <label className="form-label">Select Invoice *</label>
             <select
@@ -101,13 +135,17 @@ const RecordPaymentModal = ({ isOpen, onClose, onSaved, defaultInvoiceId = null,
             <input
               type="number"
               step="0.01"
+              min="0.01"
+              max={currentMaxAmount || undefined}
               className="form-control"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               required
             />
-            {maxAmount !== null && (
-              <span className="form-hint">Max outstanding: ${Number(maxAmount).toFixed(2)}</span>
+            {currentMaxAmount !== null && currentMaxAmount !== undefined && (
+              <span className="form-hint" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                Max outstanding: ${Number(currentMaxAmount).toFixed(2)}
+              </span>
             )}
           </div>
 

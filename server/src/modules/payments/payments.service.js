@@ -1,4 +1,5 @@
 import * as PaymentsModel from './payments.model.js';
+import { validateRecordPayment, validatePaymentQuery } from './payments.validation.js';
 import prisma from '../../config/db.js';
 
 const VALID_METHODS = ['CASH', 'CARD', 'BANK_TRANSFER', 'UPI', 'OTHER'];
@@ -10,12 +11,24 @@ const generatePaymentNumber = async () => {
   return `PAY-${year}-${nextNum}`;
 };
 
-export const listPayments = async ({ page = 1, limit = 10, customerId, invoiceId, paymentMethod }, currentUser) => {
+export const listPayments = async (query = {}, currentUser) => {
+  validatePaymentQuery(query);
+
+  const {
+    page = 1,
+    limit = 10,
+    customerId,
+    invoiceId,
+    paymentMethod,
+    startDate,
+    endDate
+  } = query;
+
   const pageNum = Math.max(1, parseInt(page, 10) || 1);
   const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 10));
   const skip = (pageNum - 1) * limitNum;
 
-  // Customer data isolation
+  // Customer data isolation: customer can only ever see their own payments
   let filterCustomerId = customerId;
   if (currentUser.role === 'CUSTOMER') {
     filterCustomerId = currentUser.id;
@@ -26,7 +39,9 @@ export const listPayments = async ({ page = 1, limit = 10, customerId, invoiceId
     take: limitNum,
     customerId: filterCustomerId,
     invoiceId,
-    paymentMethod
+    paymentMethod,
+    startDate,
+    endDate
   });
 
   return {
@@ -48,6 +63,7 @@ export const getPaymentById = async (id, currentUser) => {
     throw error;
   }
 
+  // Customer data isolation
   if (currentUser.role === 'CUSTOMER' && payment.customerId !== currentUser.id) {
     const error = new Error('Unauthorized to view this payment');
     error.statusCode = 403;
@@ -57,27 +73,46 @@ export const getPaymentById = async (id, currentUser) => {
   return payment;
 };
 
-export const recordPayment = async (paymentData, currentUser) => {
-  const { invoiceId, amount, paymentMethod = 'BANK_TRANSFER', referenceNote, transactionId, paymentDate } = paymentData;
-
+export const getPaymentsByInvoiceId = async (invoiceId, currentUser) => {
   if (!invoiceId) {
     const error = new Error('Invoice ID is required');
     error.statusCode = 400;
     throw error;
   }
 
-  const parsedAmount = parseFloat(amount);
-  if (isNaN(parsedAmount) || parsedAmount <= 0) {
-    const error = new Error('Payment amount must be a positive number');
-    error.statusCode = 400;
+  const invoice = await prisma.invoice.findUnique({
+    where: { id: invoiceId }
+  });
+
+  if (!invoice) {
+    const error = new Error('Invoice not found');
+    error.statusCode = 404;
     throw error;
   }
 
-  if (!VALID_METHODS.includes(paymentMethod)) {
-    const error = new Error(`Payment method must be one of: ${VALID_METHODS.join(', ')}`);
-    error.statusCode = 400;
+  if (currentUser.role === 'CUSTOMER' && invoice.customerId !== currentUser.id) {
+    const error = new Error('Unauthorized to view payments for this invoice');
+    error.statusCode = 403;
     throw error;
   }
+
+  return PaymentsModel.findPaymentsByInvoiceId(invoiceId);
+};
+
+export const recordPayment = async (paymentData, currentUser) => {
+  validateRecordPayment(paymentData);
+
+  const {
+    invoiceId,
+    amount,
+    paymentMethod = 'BANK_TRANSFER',
+    referenceNote,
+    note,
+    transactionId,
+    paymentDate
+  } = paymentData;
+
+  const parsedAmount = Math.round(parseFloat(amount) * 100) / 100;
 
   const invoice = await prisma.invoice.findUnique({
     where: { id: invoiceId },
@@ -114,11 +149,15 @@ export const recordPayment = async (paymentData, currentUser) => {
   }
 
   const paymentNumber = await generatePaymentNumber();
-  const newAmountPaid = Math.round((Number(invoice.amountPaid) + parsedAmount) * 100) / 100;
+  const currentPaid = Number(invoice.amountPaid);
+  const newAmountPaid = Math.round((currentPaid + parsedAmount) * 100) / 100;
   const newOutstanding = Math.max(0, Math.round((outstanding - parsedAmount) * 100) / 100);
-  const newStatus = newOutstanding <= 0 ? 'PAID' : 'PARTIALLY_PAID';
+  const newStatus = newOutstanding <= 0.001 ? 'PAID' : 'PARTIALLY_PAID';
 
-  // Perform inside database transaction
+  const finalReferenceNote = (referenceNote || note || '').trim() || null;
+  const finalTransactionId = transactionId ? transactionId.trim() : null;
+
+  // Perform inside atomic database transaction
   return prisma.$transaction(async (tx) => {
     const payment = await tx.payment.create({
       data: {
@@ -129,12 +168,19 @@ export const recordPayment = async (paymentData, currentUser) => {
         paymentMethod,
         amount: parsedAmount,
         paymentDate: paymentDate ? new Date(paymentDate) : new Date(),
-        referenceNote: referenceNote ? referenceNote.trim() : null,
-        transactionId: transactionId ? transactionId.trim() : null
+        referenceNote: finalReferenceNote,
+        transactionId: finalTransactionId
       },
       include: {
-        customer: true,
-        invoice: true
+        customer: {
+          select: { id: true, firstName: true, lastName: true, email: true }
+        },
+        invoice: {
+          select: { id: true, invoiceNumber: true, total: true, amountPaid: true, outstandingAmount: true, status: true }
+        },
+        recordedBy: {
+          select: { id: true, firstName: true, lastName: true, email: true }
+        }
       }
     });
 
