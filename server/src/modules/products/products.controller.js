@@ -37,6 +37,15 @@ export const updateProduct = async (req, res, next) => {
   }
 };
 
+export const toggleProductStatus = async (req, res, next) => {
+  try {
+    const product = await ProductsService.toggleProductStatus(req.params.id, req.body.isActive);
+    return successResponse(res, 200, `Product ${product.isActive ? 'activated' : 'deactivated'} successfully`, { product });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const deleteProduct = async (req, res, next) => {
   try {
     const result = await ProductsService.removeOrDeactivateProduct(req.params.id);
@@ -50,6 +59,15 @@ export const addVariant = async (req, res, next) => {
   try {
     const variant = await ProductsService.addVariant(req.params.id, req.body);
     return successResponse(res, 201, 'Product variant added successfully', { variant });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateVariant = async (req, res, next) => {
+  try {
+    const variant = await ProductsService.updateVariant(req.params.id, req.params.variantId, req.body);
+    return successResponse(res, 200, 'Product variant updated successfully', { variant });
   } catch (error) {
     next(error);
   }
