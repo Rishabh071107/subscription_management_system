@@ -3,7 +3,7 @@ import { successResponse } from '../../utils/response.js';
 
 export const getSummary = async (req, res, next) => {
   try {
-    const summary = await DashboardService.getDashboardSummary(req.user);
+    const summary = await DashboardService.getDashboardSummary(req.query, req.user);
     return successResponse(res, 200, 'Dashboard summary retrieved successfully', summary);
   } catch (error) {
     next(error);
@@ -28,10 +28,19 @@ export const getSubscriptionReport = async (req, res, next) => {
   }
 };
 
+export const getPaymentsSummary = async (req, res, next) => {
+  try {
+    const summary = await DashboardService.getPaymentsSummary(req.query);
+    return successResponse(res, 200, 'Payments summary retrieved successfully', summary);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getOverdueReport = async (req, res, next) => {
   try {
     const report = await DashboardService.getOverdueReport();
-    return successResponse(res, 200, 'Overdue invoices report retrieved successfully', report);
+    return successResponse(res, 200, 'Overdue report retrieved successfully', report);
   } catch (error) {
     next(error);
   }

@@ -70,6 +70,7 @@ app.use('/api/overdue', overdueRoutes);
 app.use('/api/v1/overdue', overdueRoutes);
 app.use('/api/discounts', discountRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/v1/reports/dashboard', dashboardRoutes);
 
 // 404 Route Handler
 app.use('*', (req, res) => {

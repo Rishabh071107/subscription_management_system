@@ -225,7 +225,7 @@ test('Overdue Summary: GET /api/overdue/summary returns aggregated debt metrics 
 });
 
 test('Overdue List: GET /api/overdue/invoices excludes future, paid, and cancelled invoices', async () => {
-  const res = await fetch(`${baseUrl}/api/overdue/invoices`, {
+  const res = await fetch(`${baseUrl}/api/overdue/invoices?customerId=${customerUser.id}&limit=50`, {
     headers: { cookie: staffCookie }
   });
   assert.equal(res.status, 200);
