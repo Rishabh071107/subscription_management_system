@@ -20,3 +20,4 @@ export default function RequireRole({ allowedRoles = [] }) {
 
   return <Outlet />;
 }
+

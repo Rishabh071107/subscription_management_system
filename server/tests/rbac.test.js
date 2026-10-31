@@ -228,3 +228,4 @@ test('RBAC: Inactive user attempting login is denied with HTTP 403', async () =>
   assert.equal(data.success, false);
   assert.ok(data.message.toLowerCase().includes('deactivated'));
 });
+
