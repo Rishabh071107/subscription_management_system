@@ -28,6 +28,8 @@ import ProfilePage from './modules/profile/ProfilePage.jsx';
 import SettingsPage from './modules/settings/SettingsPage.jsx';
 import InvoiceList from './modules/invoices/InvoiceList.jsx';
 import InvoiceDetail from './modules/invoices/InvoiceDetail.jsx';
+import BillingRunsList from './modules/billing/BillingRunsList.jsx';
+import BillingRunDetail from './modules/billing/BillingRunDetail.jsx';
 
 // Customer Portal Pages
 import CustomerDashboard from './modules/dashboard/CustomerDashboard.jsx';
@@ -63,6 +65,8 @@ export default function App() {
               <Route element={<InternalLayout />}>
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/staff" element={<UserList roleFilter="STAFF" />} />
+                <Route path="/admin/billing" element={<BillingRunsList />} />
+                <Route path="/admin/billing/:id" element={<BillingRunDetail />} />
                 <Route path="/settings" element={<SettingsPage />} />
               </Route>
             </Route>

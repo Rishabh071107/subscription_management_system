@@ -327,40 +327,11 @@ export const createManualInvoice = async (data, currentUser) => {
 
 /**
  * Scan active subscriptions and generate all due recurring invoices
+ * Centralized delegation to Recurring Billing Engine
  */
 export const runBillingCycle = async () => {
-  const now = new Date();
-  const dueSubscriptions = await prisma.subscription.findMany({
-    where: {
-      status: 'ACTIVE',
-      nextBillingDate: {
-        lte: now
-      }
-    }
-  });
-
-  const results = {
-    totalEvaluated: dueSubscriptions.length,
-    generated: [],
-    errors: []
-  };
-
-  for (const sub of dueSubscriptions) {
-    try {
-      const invoice = await generateSubscriptionInvoice(sub.id);
-      results.generated.push({
-        subscriptionId: sub.id,
-        invoiceNumber: invoice.invoiceNumber
-      });
-    } catch (err) {
-      results.errors.push({
-        subscriptionId: sub.id,
-        error: err.message
-      });
-    }
-  }
-
-  return results;
+  const { executeBillingRun } = await import('../billing/billing.service.js');
+  return executeBillingRun();
 };
 
 export const updateInvoiceStatus = async (id, status, currentUser) => {

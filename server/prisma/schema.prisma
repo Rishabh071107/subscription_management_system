@@ -75,6 +75,18 @@ enum DiscountScope {
   PRODUCT_SPECIFIC
 }
 
+enum BillingRunStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum BillingItemStatus {
+  SUCCESS
+  FAILED
+  SKIPPED
+}
+
 // -------------------------------------------------------------
 // MODELS
 // -------------------------------------------------------------
@@ -262,6 +274,7 @@ model Subscription {
   lines              SubscriptionLine[]
   invoices           Invoice[]
   discountUsages     DiscountUsage[]
+  billingRunItems    BillingRunItem[]
 
   @@index([subscriptionNumber])
   @@index([customerId])
@@ -313,6 +326,7 @@ model Invoice {
   lines              InvoiceLine[]
   payments           Payment[]
   discountUsages     DiscountUsage[]
+  billingRunItems    BillingRunItem[]
 
   // CRITICAL BILLING RULE: Prevent duplicate invoices for the same subscription and billing period
   @@unique([subscriptionId, billingPeriodStart, billingPeriodEnd])
@@ -406,6 +420,42 @@ model DiscountUsage {
   @@index([customerId])
   @@index([subscriptionId])
   @@index([invoiceId])
+}
+
+model BillingRun {
+  id             String           @id @default(uuid())
+  startedAt      DateTime         @default(now())
+  completedAt    DateTime?
+  status         BillingRunStatus @default(RUNNING)
+  processedCount Int              @default(0)
+  successCount   Int              @default(0)
+  failureCount   Int              @default(0)
+  errorSummary   String?          @db.Text
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  // Relations
+  items          BillingRunItem[]
+
+  @@index([status])
+  @@index([startedAt])
+}
+
+model BillingRunItem {
+  id             String            @id @default(uuid())
+  billingRunId   String
+  billingRun     BillingRun        @relation(fields: [billingRunId], references: [id], onDelete: Cascade)
+  subscriptionId String
+  subscription   Subscription      @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
+  invoiceId      String?
+  invoice        Invoice?          @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  status         BillingItemStatus @default(SUCCESS)
+  errorMessage   String?           @db.Text
+  createdAt      DateTime          @default(now())
+
+  @@index([billingRunId])
+  @@index([subscriptionId])
+  @@index([status])
 }
 
 model AuditLog {
