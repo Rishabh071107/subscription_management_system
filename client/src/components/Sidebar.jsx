@@ -61,6 +61,19 @@ export default function Sidebar({
           </NavLink>
         )}
 
+        <div className="internal-nav-section-title">Billing & Operations</div>
+        {(isAdmin || isStaff) && (
+          <NavLink
+            to="/invoices"
+            className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            title="Invoices"
+          >
+            <span className="nav-icon">📄</span>
+            <span>Invoices</span>
+          </NavLink>
+        )}
+
         <div className="internal-nav-section-title">Settings & Account</div>
         <NavLink
           to="/profile"
