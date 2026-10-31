@@ -26,6 +26,8 @@ import AdminDashboard from './modules/dashboard/AdminDashboard.jsx';
 import UserList from './modules/users/UserList.jsx';
 import ProfilePage from './modules/profile/ProfilePage.jsx';
 import SettingsPage from './modules/settings/SettingsPage.jsx';
+import ProductList from './modules/products/ProductList.jsx';
+import PlanList from './modules/plans/PlanList.jsx';
 
 // Customer Portal Pages
 import CustomerDashboard from './modules/dashboard/CustomerDashboard.jsx';
@@ -68,6 +70,8 @@ export default function App() {
             {/* Internal Routes (Admin & Staff) */}
             <Route element={<InternalRoute />}>
               <Route element={<InternalLayout />}>
+                <Route path="/products" element={<ProductList />} />
+                <Route path="/plans" element={<PlanList />} />
                 <Route path="/customers" element={<UserList roleFilter="CUSTOMER" />} />
                 <Route path="/profile" element={<ProfilePage />} />
               </Route>
@@ -77,6 +81,7 @@ export default function App() {
             <Route element={<CustomerPortalRoute />}>
               <Route element={<CustomerPortalLayout />}>
                 <Route path="/portal/dashboard" element={<CustomerDashboard />} />
+                <Route path="/portal/plans" element={<PlanList />} />
                 <Route path="/portal/profile" element={<PortalProfilePage />} />
               </Route>
             </Route>

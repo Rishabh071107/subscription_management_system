@@ -249,3 +249,28 @@ export const updatePlanLifecycleStatus = async (id, action) => {
 
   return PlansModel.updatePlanStatus(id, newStatus);
 };
+
+export const removeOrClosePlan = async (id) => {
+  const existing = await PlansModel.findPlanById(id);
+  if (!existing) {
+    const error = new Error('Plan not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const subscriptionCount = existing._count?.subscriptions || 0;
+  if (subscriptionCount > 0) {
+    const closed = await PlansModel.updatePlanStatus(id, 'CLOSED');
+    return {
+      action: 'CLOSED',
+      message: 'Plan has existing subscriptions and was closed instead of permanently deleted to preserve contract history.',
+      plan: closed
+    };
+  }
+
+  await PlansModel.deletePlan(id);
+  return {
+    action: 'DELETED',
+    message: 'Subscription plan deleted successfully'
+  };
+};

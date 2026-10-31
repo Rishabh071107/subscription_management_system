@@ -65,6 +65,19 @@ const PlanFormModal = ({ isOpen, onClose, onSaved, planToEdit = null }) => {
       return;
     }
 
+    const minQty = parseInt(formData.minQuantity, 10);
+    if (isNaN(minQty) || minQty < 1) {
+      error('Minimum quantity must be at least 1');
+      return;
+    }
+
+    if (formData.availabilityEndDate && formData.availabilityStartDate) {
+      if (new Date(formData.availabilityEndDate) <= new Date(formData.availabilityStartDate)) {
+        error('Availability end date must be strictly after the start date');
+        return;
+      }
+    }
+
     try {
       setLoading(true);
       if (planToEdit) {
