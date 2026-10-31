@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import Card from '../../components/Card.jsx';
@@ -19,6 +19,28 @@ export default function PortalProfilePage() {
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await api.get('/portal/profile');
+        const profile = res.data?.data?.user || res.data?.user;
+        if (profile) {
+          setFormData({
+            firstName: profile.firstName || '',
+            lastName: profile.lastName || '',
+            phone: profile.phone || ''
+          });
+          if (updateUserProfile) {
+            updateUserProfile(profile);
+          }
+        }
+      } catch {
+        // Fallback to auth context user
+      }
+    };
+    fetchProfile();
+  }, []);
+
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
@@ -30,19 +52,24 @@ export default function PortalProfilePage() {
 
     try {
       setLoading(true);
-      const res = await api.put(`/users/${user.id}`, {
+      const res = await api.patch('/portal/profile', {
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phone
       });
-      updateUserProfile(res.data?.user || formData);
-      setSuccessMsg('Your profile has been successfully updated');
+      const updatedUser = res.data?.data?.user || res.data?.user || formData;
+      if (updateUserProfile) {
+        updateUserProfile(updatedUser);
+      }
+      setSuccessMsg('Your customer profile has been successfully updated.');
     } catch (err) {
       setErrorMsg(err.message || 'Failed to update profile');
     } finally {
       setLoading(false);
     }
   };
+
+  const userInitials = `${formData.firstName?.[0] || user?.firstName?.[0] || ''}${formData.lastName?.[0] || user?.lastName?.[0] || ''}`.toUpperCase();
 
   return (
     <div>
@@ -57,10 +84,10 @@ export default function PortalProfilePage() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px', alignItems: 'start' }}>
         <Card title="Customer Account">
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '12px 0' }}>
-            <div className="avatar-circle" style={{ width: 64, height: 64, fontSize: 22, marginBottom: 12 }}>
-              {`${user?.firstName?.[0] || ''}${user?.lastName?.[0] || ''}`.toUpperCase()}
+            <div className="avatar-circle" style={{ width: 64, height: 64, fontSize: 22, marginBottom: 12, background: '#714B67', color: '#FFFFFF' }}>
+              {userInitials || 'C'}
             </div>
-            <h3 style={{ fontSize: 16, fontWeight: 600 }}>{user?.firstName} {user?.lastName}</h3>
+            <h3 style={{ fontSize: 16, fontWeight: 600 }}>{formData.firstName || user?.firstName} {formData.lastName || user?.lastName}</h3>
             <p style={{ color: 'var(--color-text-secondary)', fontSize: 13, marginBottom: 10 }}>{user?.email}</p>
             <Badge status="CUSTOMER" />
           </div>
@@ -113,4 +140,3 @@ export default function PortalProfilePage() {
     </div>
   );
 }
-

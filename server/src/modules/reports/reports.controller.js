@@ -74,3 +74,4 @@ export const getRevenueReport = async (req, res, next) => {
     next(error);
   }
 };
+

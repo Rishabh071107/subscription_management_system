@@ -20,6 +20,7 @@ import overdueRoutes from './modules/overdue/overdue.routes.js';
 import discountRoutes from './modules/discounts/discounts.routes.js';
 import dashboardRoutes from './modules/dashboard/dashboard.routes.js';
 import reportsRoutes from './modules/reports/reports.routes.js';
+import portalRoutes from './modules/portal/portal.routes.js';
 
 const app = express();
 
@@ -74,6 +75,8 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/v1/reports/dashboard', dashboardRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/v1/reports', reportsRoutes);
+app.use('/api/portal', portalRoutes);
+app.use('/api/v1/portal', portalRoutes);
 
 // 404 Route Handler
 app.use('*', (req, res) => {

@@ -35,7 +35,9 @@ import OverdueList from './modules/overdue/OverdueList.jsx';
 import FinancialReports from './modules/reports/FinancialReports.jsx';
 
 // Customer Portal Pages
-import CustomerDashboard from './modules/dashboard/CustomerDashboard.jsx';
+import PortalDashboard from './modules/portal/PortalDashboard.jsx';
+import PortalSubscriptions from './modules/portal/PortalSubscriptions.jsx';
+import PortalSubscriptionDetail from './modules/portal/PortalSubscriptionDetail.jsx';
 import PortalProfilePage from './modules/portal/PortalProfilePage.jsx';
 
 export default function App() {
@@ -90,7 +92,9 @@ export default function App() {
             {/* Customer Portal Routes (Customer Only) */}
             <Route element={<CustomerPortalRoute />}>
               <Route element={<CustomerPortalLayout />}>
-                <Route path="/portal/dashboard" element={<CustomerDashboard />} />
+                <Route path="/portal/dashboard" element={<PortalDashboard />} />
+                <Route path="/portal/subscriptions" element={<PortalSubscriptions />} />
+                <Route path="/portal/subscriptions/:id" element={<PortalSubscriptionDetail />} />
                 <Route path="/portal/invoices" element={<InvoiceList />} />
                 <Route path="/portal/invoices/:id" element={<InvoiceDetail />} />
                 <Route path="/portal/payments" element={<PaymentList isPortal />} />

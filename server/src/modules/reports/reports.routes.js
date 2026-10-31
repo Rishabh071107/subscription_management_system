@@ -14,3 +14,4 @@ router.get('/payments', authorize('ADMIN', 'STAFF'), ReportsController.getPaymen
 router.get('/revenue', authorize('ADMIN', 'STAFF'), ReportsController.getRevenueReport);
 
 export default router;
+

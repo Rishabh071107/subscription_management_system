@@ -210,3 +210,4 @@ test('Validation: Invalid query parameters throw 400 with errors list', async ()
   const json = await res.json();
   assert.ok(json.errors || json.message);
 });
+

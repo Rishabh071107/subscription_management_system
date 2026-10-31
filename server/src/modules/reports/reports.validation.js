@@ -46,3 +46,4 @@ export const validateReportQuery = (query, type = 'general') => {
     throw error;
   }
 };
+
