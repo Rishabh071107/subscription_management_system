@@ -30,6 +30,7 @@ import InvoiceList from './modules/invoices/InvoiceList.jsx';
 import InvoiceDetail from './modules/invoices/InvoiceDetail.jsx';
 import BillingRunsList from './modules/billing/BillingRunsList.jsx';
 import BillingRunDetail from './modules/billing/BillingRunDetail.jsx';
+import PaymentList from './modules/payments/PaymentList.jsx';
 
 // Customer Portal Pages
 import CustomerDashboard from './modules/dashboard/CustomerDashboard.jsx';
@@ -77,6 +78,7 @@ export default function App() {
                 <Route path="/customers" element={<UserList roleFilter="CUSTOMER" />} />
                 <Route path="/invoices" element={<InvoiceList />} />
                 <Route path="/invoices/:id" element={<InvoiceDetail />} />
+                <Route path="/payments" element={<PaymentList />} />
                 <Route path="/profile" element={<ProfilePage />} />
               </Route>
             </Route>
@@ -87,6 +89,7 @@ export default function App() {
                 <Route path="/portal/dashboard" element={<CustomerDashboard />} />
                 <Route path="/portal/invoices" element={<InvoiceList />} />
                 <Route path="/portal/invoices/:id" element={<InvoiceDetail />} />
+                <Route path="/portal/payments" element={<PaymentList isPortal />} />
                 <Route path="/portal/profile" element={<PortalProfilePage />} />
               </Route>
             </Route>

@@ -19,6 +19,15 @@ export const getPaymentById = async (req, res, next) => {
   }
 };
 
+export const getPaymentsByInvoiceId = async (req, res, next) => {
+  try {
+    const payments = await PaymentsService.getPaymentsByInvoiceId(req.params.invoiceId, req.user);
+    return successResponse(res, 200, 'Invoice payments retrieved successfully', { payments });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const createPayment = async (req, res, next) => {
   try {
     const payment = await PaymentsService.recordPayment(req.body, req.user);

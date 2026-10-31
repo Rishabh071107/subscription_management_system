@@ -86,6 +86,18 @@ export default function Sidebar({
           </NavLink>
         )}
 
+        {(isAdmin || isStaff) && (
+          <NavLink
+            to="/payments"
+            className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            title="Payments"
+          >
+            <span className="nav-icon">💳</span>
+            <span>Payments</span>
+          </NavLink>
+        )}
+
         <div className="internal-nav-section-title">Settings & Account</div>
         <NavLink
           to="/profile"

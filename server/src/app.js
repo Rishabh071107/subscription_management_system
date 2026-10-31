@@ -60,8 +60,11 @@ app.use('/api/plans', planRoutes);
 app.use('/api/quotations', quotationRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/invoices', invoiceRoutes);
+app.use('/api/v1/invoices', invoiceRoutes);
 app.use('/api/billing', billingRoutes);
+app.use('/api/v1/billing', billingRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/discounts', discountRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
