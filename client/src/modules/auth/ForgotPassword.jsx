@@ -1,31 +1,36 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api.js';
-import { useNotification } from '../../context/NotificationContext.jsx';
+import Button from '../../components/Button.jsx';
+import Input from '../../components/Input.jsx';
+import Alert from '../../components/Alert.jsx';
 
-const ForgotPassword = () => {
+export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [resetTokenReceived, setResetTokenReceived] = useState(null);
-
-  const { success, error } = useNotification();
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMessage('');
+    setSuccessMessage('');
+
     if (!email) {
-      error('Please enter your email address');
+      setErrorMessage('Please enter your email address');
       return;
     }
 
     try {
       setLoading(true);
       const res = await api.post('/auth/forgot-password', { email });
-      success(res.message || 'Password reset instructions have been generated.');
+      setSuccessMessage(res.message || 'If an account exists with this email, password reset instructions have been generated.');
       if (res.data?.resetToken) {
         setResetTokenReceived(res.data.resetToken);
       }
     } catch (err) {
-      error(err.message || 'Failed to process password reset');
+      setErrorMessage(err.message || 'Failed to process password reset request');
     } finally {
       setLoading(false);
     }
@@ -33,63 +38,71 @@ const ForgotPassword = () => {
 
   return (
     <div>
-      <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem', textAlign: 'center' }}>
+      <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '6px', textAlign: 'center' }}>
         Reset Your Password
       </h2>
-      <p style={{ textAlign: 'center', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
-        Enter your verified email to receive a password reset token
+      <p style={{ textAlign: 'center', marginBottom: '20px', color: 'var(--color-text-secondary)', fontSize: '13px' }}>
+        Enter your verified email to receive password reset instructions
       </p>
 
+      {errorMessage && (
+        <Alert type="danger" onClose={() => setErrorMessage('')}>
+          {errorMessage}
+        </Alert>
+      )}
+
+      {successMessage && (
+        <Alert type="info" onClose={() => setSuccessMessage('')}>
+          {successMessage}
+        </Alert>
+      )}
+
       {resetTokenReceived ? (
-        <div style={{ background: '#f5f3ff', border: '1px solid #c4b5fd', borderRadius: '8px', padding: '1rem', marginBottom: '1.5rem' }}>
-          <p style={{ fontSize: '0.85rem', fontWeight: 700, color: '#6d28d9', marginBottom: '0.5rem' }}>
-            Password Reset Token Generated:
+        <div style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--border-default)', borderRadius: 'var(--radius-md)', padding: '16px', marginBottom: '20px' }}>
+          <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-primary)', marginBottom: '8px' }}>
+            Generated Reset Token (Development/Testing):
           </p>
-          <code style={{ display: 'block', background: '#ffffff', padding: '0.5rem', borderRadius: '4px', wordBreak: 'break-all', fontSize: '0.8rem', color: '#0f172a' }}>
+          <code style={{ display: 'block', backgroundColor: '#FFFFFF', border: '1px solid var(--border-default)', padding: '8px', borderRadius: '4px', wordBreak: 'break-all', fontSize: '12px' }}>
             {resetTokenReceived}
           </code>
-          <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+          <div style={{ marginTop: '16px', textAlign: 'center' }}>
             <Link
               to={`/reset-password?token=${resetTokenReceived}`}
               className="btn btn-primary btn-sm"
               style={{ display: 'inline-block' }}
             >
-              Proceed to Reset Password →
+              Continue to Reset Password →
             </Link>
           </div>
         </div>
       ) : (
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label">Email Address</label>
-            <input
-              type="email"
-              className="form-control"
-              placeholder="name@company.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
+          <Input
+            label="Email Address"
+            id="forgot-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="name@company.com"
+            required
+          />
 
-          <button
+          <Button
             type="submit"
-            className="btn btn-primary"
-            style={{ width: '100%', marginTop: '0.5rem' }}
-            disabled={loading}
+            variant="primary"
+            block
+            loading={loading}
           >
-            {loading ? 'Sending Request...' : 'Send Reset Instructions'}
-          </button>
+            Send Reset Instructions
+          </Button>
         </form>
       )}
 
-      <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.875rem' }}>
-        <Link to="/login" style={{ color: '#7c3aed', fontWeight: 600 }}>
+      <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '13px' }}>
+        <Link to="/login" style={{ fontWeight: 600 }}>
           ← Back to Sign In
         </Link>
       </div>
     </div>
   );
-};
-
-export default ForgotPassword;
+}

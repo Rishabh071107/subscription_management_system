@@ -8,15 +8,17 @@ async function main() {
 
   // 1. Seed Users
   const salt = await bcrypt.genSalt(10);
-  const adminPassword = await bcrypt.hash('Brightloop@2026', salt);
+  const adminEmail = process.env.ADMIN_BOOTSTRAP_EMAIL || 'admin@brightloop.io';
+  const adminRawPassword = process.env.ADMIN_BOOTSTRAP_PASSWORD || 'Brightloop@2026';
+  const adminPassword = await bcrypt.hash(adminRawPassword, salt);
   const staffPassword = await bcrypt.hash('Staff@2026!', salt);
   const customerPassword = await bcrypt.hash('Customer@2026!', salt);
 
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@brightloop.io' },
+    where: { email: adminEmail },
     update: {},
     create: {
-      email: 'admin@brightloop.io',
+      email: adminEmail,
       password: adminPassword,
       firstName: 'System',
       lastName: 'Administrator',

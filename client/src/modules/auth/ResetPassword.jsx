@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import api from '../../services/api.js';
-import { useNotification } from '../../context/NotificationContext.jsx';
+import Button from '../../components/Button.jsx';
+import Input from '../../components/Input.jsx';
+import Alert from '../../components/Alert.jsx';
 
-const ResetPassword = () => {
+export default function ResetPassword() {
   const [searchParams] = useSearchParams();
   const tokenFromUrl = searchParams.get('token') || '';
 
@@ -11,8 +13,9 @@ const ResetPassword = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
-  const { success, error } = useNotification();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,32 +24,23 @@ const ResetPassword = () => {
     }
   }, [tokenFromUrl]);
 
-  const validatePasswordRules = (pass) => {
-    return {
-      length: pass.length >= 8,
-      upper: /[A-Z]/.test(pass),
-      lower: /[a-z]/.test(pass),
-      special: /[^A-Za-z0-9]/.test(pass)
-    };
-  };
-
-  const passRules = validatePasswordRules(newPassword);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMessage('');
+    setSuccessMessage('');
 
     if (!token) {
-      error('Reset token is required');
+      setErrorMessage('Reset token is required');
       return;
     }
 
-    if (!passRules.length || !passRules.upper || !passRules.lower || !passRules.special) {
-      error('Password does not satisfy complexity requirements');
+    if (newPassword.length < 8) {
+      setErrorMessage('New password must be at least 8 characters long');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      error('Passwords do not match');
+      setErrorMessage('Passwords do not match');
       return;
     }
 
@@ -56,10 +50,12 @@ const ResetPassword = () => {
         token,
         newPassword
       });
-      success(res.message || 'Password reset successfully! Please sign in.');
-      navigate('/login');
+      setSuccessMessage(res.message || 'Password successfully updated! Redirecting to sign in...');
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
     } catch (err) {
-      error(err.message || 'Failed to reset password');
+      setErrorMessage(err.message || 'Failed to reset password. Token may be expired.');
     } finally {
       setLoading(false);
     }
@@ -67,81 +63,73 @@ const ResetPassword = () => {
 
   return (
     <div>
-      <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem', textAlign: 'center' }}>
+      <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '6px', textAlign: 'center' }}>
         Set New Password
       </h2>
-      <p style={{ textAlign: 'center', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
-        Create a secure password with required complexity
+      <p style={{ textAlign: 'center', marginBottom: '20px', color: 'var(--color-text-secondary)', fontSize: '13px' }}>
+        Create a new secure password for your account
       </p>
 
+      {errorMessage && (
+        <Alert type="danger" onClose={() => setErrorMessage('')}>
+          {errorMessage}
+        </Alert>
+      )}
+
+      {successMessage && (
+        <Alert type="success">
+          {successMessage}
+        </Alert>
+      )}
+
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label className="form-label">Reset Token</label>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Paste reset token"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            required
-          />
-        </div>
+        <Input
+          label="Password Reset Token"
+          id="reset-token"
+          type="text"
+          value={token}
+          onChange={(e) => setToken(e.target.value)}
+          placeholder="Paste token from email or previous step"
+          required
+        />
 
-        <div className="form-group">
-          <label className="form-label">New Password</label>
-          <input
-            type="password"
-            className="form-control"
-            placeholder="••••••••"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            required
-          />
-          <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-            <span style={{ color: passRules.length ? '#059669' : '#94a3b8' }}>
-              {passRules.length ? '✓' : '○'} Longer than 8 characters
-            </span>
-            <span style={{ color: passRules.upper ? '#059669' : '#94a3b8' }}>
-              {passRules.upper ? '✓' : '○'} At least one uppercase letter
-            </span>
-            <span style={{ color: passRules.lower ? '#059669' : '#94a3b8' }}>
-              {passRules.lower ? '✓' : '○'} At least one lowercase letter
-            </span>
-            <span style={{ color: passRules.special ? '#059669' : '#94a3b8' }}>
-              {passRules.special ? '✓' : '○'} At least one special character (!@#$%^&*)
-            </span>
-          </div>
-        </div>
+        <Input
+          label="New Password"
+          id="new-password"
+          type="password"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          placeholder="At least 8 characters"
+          helper="Must be at least 8 characters with letters, numbers, and symbols"
+          required
+        />
 
-        <div className="form-group">
-          <label className="form-label">Confirm New Password</label>
-          <input
-            type="password"
-            className="form-control"
-            placeholder="••••••••"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-          />
-        </div>
+        <Input
+          label="Confirm New Password"
+          id="confirm-new-password"
+          type="password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          placeholder="Confirm new password"
+          required
+        />
 
-        <button
+        <Button
           type="submit"
-          className="btn btn-primary"
-          style={{ width: '100%', marginTop: '0.5rem' }}
-          disabled={loading}
+          variant="primary"
+          block
+          loading={loading}
+          style={{ marginTop: '8px' }}
         >
-          {loading ? 'Updating Password...' : 'Reset Password'}
-        </button>
+          Reset Password
+        </Button>
       </form>
 
-      <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.875rem' }}>
-        <Link to="/login" style={{ color: '#7c3aed', fontWeight: 600 }}>
+      <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '13px' }}>
+        <Link to="/login" style={{ fontWeight: 600 }}>
           ← Back to Sign In
         </Link>
       </div>
     </div>
   );
-};
-
-export default ResetPassword;
+}

@@ -4,94 +4,78 @@ import api from '../services/api.js';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    try {
-      const savedUser = localStorage.getItem('brightloop_user');
-      return savedUser ? JSON.parse(savedUser) : null;
-    } catch {
-      return null;
-    }
-  });
-
-  const [token, setToken] = useState(() => localStorage.getItem('brightloop_token'));
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Verify token on initial load
+  // Validate session on initial load and page refresh via server-managed HTTP-only cookie
   useEffect(() => {
+    let isMounted = true;
     const initAuth = async () => {
-      const storedToken = localStorage.getItem('brightloop_token');
-      if (storedToken) {
-        try {
-          const res = await api.get('/auth/me');
-          if (res?.data?.user) {
-            setUser(res.data.user);
-            localStorage.setItem('brightloop_user', JSON.stringify(res.data.user));
-          }
-        } catch {
-          // Token invalid or expired
+      try {
+        const res = await api.get('/auth/me');
+        if (isMounted && res?.data?.user) {
+          setUser(res.data.user);
+        } else if (isMounted) {
           setUser(null);
-          setToken(null);
-          localStorage.removeItem('brightloop_token');
-          localStorage.removeItem('brightloop_user');
+        }
+      } catch {
+        if (isMounted) {
+          setUser(null);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
         }
       }
-      setLoading(false);
     };
 
     initAuth();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const login = async (email, password) => {
     const res = await api.post('/auth/login', { email, password });
-    const { token: receivedToken, user: receivedUser } = res.data;
-
-    setToken(receivedToken);
+    const receivedUser = res?.data?.user;
     setUser(receivedUser);
-    localStorage.setItem('brightloop_token', receivedToken);
-    localStorage.setItem('brightloop_user', JSON.stringify(receivedUser));
-
     return receivedUser;
   };
 
   const register = async (customerData) => {
-    const res = await api.post('/auth/register', customerData);
-    const { token: receivedToken, user: receivedUser } = res.data;
-
-    setToken(receivedToken);
+    // Endpoints: POST /api/auth/signup (or /register)
+    const res = await api.post('/auth/signup', customerData);
+    const receivedUser = res?.data?.user;
     setUser(receivedUser);
-    localStorage.setItem('brightloop_token', receivedToken);
-    localStorage.setItem('brightloop_user', JSON.stringify(receivedUser));
-
     return receivedUser;
   };
 
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('brightloop_token');
-    localStorage.removeItem('brightloop_user');
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (err) {
+      console.warn('Logout API call returned error:', err.message);
+    } finally {
+      setUser(null);
+    }
   };
 
   const updateUserProfile = (updatedFields) => {
-    setUser((prev) => {
-      const updated = { ...prev, ...updatedFields };
-      localStorage.setItem('brightloop_user', JSON.stringify(updated));
-      return updated;
-    });
+    setUser((prev) => (prev ? { ...prev, ...updatedFields } : prev));
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        token,
         loading,
-        isAuthenticated: !!token && !!user,
+        isAuthenticated: !!user,
         isAdmin: user?.role === 'ADMIN',
         isStaff: user?.role === 'STAFF',
         isCustomer: user?.role === 'CUSTOMER',
         login,
         register,
+        signup: register,
         logout,
         updateUserProfile
       }}

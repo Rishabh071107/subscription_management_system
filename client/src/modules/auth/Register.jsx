@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { useNotification } from '../../context/NotificationContext.jsx';
+import Button from '../../components/Button.jsx';
+import Input from '../../components/Input.jsx';
+import Alert from '../../components/Alert.jsx';
 
-const Register = () => {
+export default function Register() {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -13,41 +15,31 @@ const Register = () => {
     confirmPassword: ''
   });
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const { register } = useAuth();
-  const { success, error } = useNotification();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
-
-  const validatePasswordRules = (pass) => {
-    return {
-      length: pass.length >= 8,
-      upper: /[A-Z]/.test(pass),
-      lower: /[a-z]/.test(pass),
-      special: /[^A-Za-z0-9]/.test(pass)
-    };
-  };
-
-  const passRules = validatePasswordRules(formData.password);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMessage('');
 
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
-      error('Please fill in all required fields');
+      setErrorMessage('Please fill in all required fields');
       return;
     }
 
-    if (!passRules.length || !passRules.upper || !passRules.lower || !passRules.special) {
-      error('Password does not meet all security complexity requirements');
+    if (formData.password.length < 8) {
+      setErrorMessage('Password must be at least 8 characters long');
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      error('Passwords do not match');
+      setErrorMessage('Passwords do not match');
       return;
     }
 
@@ -60,10 +52,10 @@ const Register = () => {
         phone: formData.phone,
         password: formData.password
       });
-      success('Account created successfully! Welcome to Brightloop.');
-      navigate('/dashboard');
+      // Newly registered customers redirect to their portal
+      navigate('/portal/dashboard');
     } catch (err) {
-      error(err.message || 'Registration failed');
+      setErrorMessage(err.message || 'Registration failed');
     } finally {
       setLoading(false);
     }
@@ -71,119 +63,96 @@ const Register = () => {
 
   return (
     <div>
-      <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem', textAlign: 'center' }}>
+      <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '6px', textAlign: 'center' }}>
         Create Customer Account
       </h2>
-      <p style={{ textAlign: 'center', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
-        Get started with Brightloop Subscription Services
+      <p style={{ textAlign: 'center', marginBottom: '20px', color: 'var(--color-text-secondary)', fontSize: '13px' }}>
+        Register to manage your Brightloop subscriptions and quotations
       </p>
 
+      {errorMessage && (
+        <Alert type="danger" onClose={() => setErrorMessage('')}>
+          {errorMessage}
+        </Alert>
+      )}
+
       <form onSubmit={handleSubmit}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-          <div className="form-group">
-            <label className="form-label">First Name *</label>
-            <input
-              type="text"
-              name="firstName"
-              className="form-control"
-              value={formData.firstName}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Last Name *</label>
-            <input
-              type="text"
-              name="lastName"
-              className="form-control"
-              value={formData.lastName}
-              onChange={handleChange}
-              required
-            />
-          </div>
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">Email Address *</label>
-          <input
-            type="email"
-            name="email"
-            className="form-control"
-            value={formData.email}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <Input
+            label="First Name"
+            name="firstName"
+            value={formData.firstName}
             onChange={handleChange}
+            placeholder="Alex"
+            required
+          />
+          <Input
+            label="Last Name"
+            name="lastName"
+            value={formData.lastName}
+            onChange={handleChange}
+            placeholder="Morgan"
             required
           />
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Phone Number</label>
-          <input
-            type="tel"
-            name="phone"
-            className="form-control"
-            placeholder="+1 555-0100"
-            value={formData.phone}
-            onChange={handleChange}
-          />
-        </div>
+        <Input
+          label="Email Address"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          placeholder="name@company.com"
+          required
+        />
 
-        <div className="form-group">
-          <label className="form-label">Password *</label>
-          <input
-            type="password"
-            name="password"
-            className="form-control"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
-          <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
-            <span style={{ color: passRules.length ? '#059669' : '#94a3b8' }}>
-              {passRules.length ? '✓' : '○'} Longer than 8 characters
-            </span>
-            <span style={{ color: passRules.upper ? '#059669' : '#94a3b8' }}>
-              {passRules.upper ? '✓' : '○'} At least one uppercase letter
-            </span>
-            <span style={{ color: passRules.lower ? '#059669' : '#94a3b8' }}>
-              {passRules.lower ? '✓' : '○'} At least one lowercase letter
-            </span>
-            <span style={{ color: passRules.special ? '#059669' : '#94a3b8' }}>
-              {passRules.special ? '✓' : '○'} At least one special character (!@#$%^&*)
-            </span>
-          </div>
-        </div>
+        <Input
+          label="Phone Number"
+          name="phone"
+          type="tel"
+          value={formData.phone}
+          onChange={handleChange}
+          placeholder="+1 555-0100"
+        />
 
-        <div className="form-group">
-          <label className="form-label">Confirm Password *</label>
-          <input
-            type="password"
-            name="confirmPassword"
-            className="form-control"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            required
-          />
-        </div>
+        <Input
+          label="Password"
+          name="password"
+          type="password"
+          value={formData.password}
+          onChange={handleChange}
+          placeholder="At least 8 characters"
+          helper="Must contain minimum 8 characters with letters, numbers, and symbols"
+          required
+        />
 
-        <button
+        <Input
+          label="Confirm Password"
+          name="confirmPassword"
+          type="password"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          placeholder="Confirm password"
+          required
+        />
+
+        <Button
           type="submit"
-          className="btn btn-primary"
-          style={{ width: '100%', marginTop: '0.5rem' }}
-          disabled={loading}
+          variant="primary"
+          block
+          loading={loading}
+          style={{ marginTop: '8px' }}
         >
-          {loading ? 'Creating Account...' : 'Register Account'}
-        </button>
+          Create Customer Account
+        </Button>
       </form>
 
-      <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.875rem', color: '#64748b' }}>
-        Already registered?{' '}
-        <Link to="/login" style={{ fontWeight: 600, color: '#7c3aed' }}>
+      <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '13px', color: 'var(--color-text-secondary)' }}>
+        Already have an account?{' '}
+        <Link to="/login" style={{ fontWeight: 600 }}>
           Sign In
         </Link>
       </div>
     </div>
   );
-};
-
-export default Register;
+}

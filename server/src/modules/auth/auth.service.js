@@ -20,9 +20,19 @@ const generateToken = (user) => {
   );
 };
 
-export const registerCustomer = async ({ email, password, firstName, lastName, phone }) => {
-  if (!email || !password || !firstName || !lastName) {
-    const error = new Error('Email, password, first name, and last name are required');
+export const registerCustomer = async (data) => {
+  const { email, password, phone } = data;
+  let firstName = data.firstName;
+  let lastName = data.lastName;
+
+  if (!firstName && data.name) {
+    const parts = data.name.trim().split(/\s+/);
+    firstName = parts[0] || 'User';
+    lastName = parts.slice(1).join(' ') || 'Customer';
+  }
+
+  if (!email || !password || !firstName) {
+    const error = new Error('Email, password, and name are required');
     error.statusCode = 400;
     throw error;
   }
@@ -40,7 +50,8 @@ export const registerCustomer = async ({ email, password, firstName, lastName, p
     throw error;
   }
 
-  const existingUser = await AuthModel.findUserByEmail(email);
+  const normalizedEmail = email.trim().toLowerCase();
+  const existingUser = await AuthModel.findUserByEmail(normalizedEmail);
   if (existingUser) {
     const error = new Error('An account with this email address already exists');
     error.statusCode = 409;
@@ -50,21 +61,35 @@ export const registerCustomer = async ({ email, password, firstName, lastName, p
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
 
+  // CRITICAL REQUIREMENT: Public signup assigns CUSTOMER role only.
+  // Any role passed by client (ADMIN, STAFF) is explicitly ignored.
   const newUser = await AuthModel.createUser({
-    email,
+    email: normalizedEmail,
     password: hashedPassword,
     firstName: firstName.trim(),
-    lastName: lastName.trim(),
+    lastName: (lastName || '').trim(),
     phone: phone ? phone.trim() : null,
     role: 'CUSTOMER'
   });
 
   const token = generateToken(newUser);
 
-  await AuthModel.logUserAudit(newUser.id, 'CUSTOMER_SIGNUP', { email: newUser.email });
+  await AuthModel.logUserAudit(newUser.id, 'CUSTOMER_SIGNUP', { email: newUser.email, role: 'CUSTOMER' });
+
+  // Sanitize user object (never return password hash)
+  const safeUser = {
+    id: newUser.id,
+    email: newUser.email,
+    firstName: newUser.firstName,
+    lastName: newUser.lastName,
+    phone: newUser.phone,
+    role: newUser.role,
+    isActive: newUser.isActive,
+    createdAt: newUser.createdAt
+  };
 
   return {
-    user: newUser,
+    user: safeUser,
     token
   };
 };
@@ -76,7 +101,10 @@ export const loginUser = async ({ email, password }) => {
     throw error;
   }
 
-  const user = await AuthModel.findUserByEmail(email);
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await AuthModel.findUserByEmail(normalizedEmail);
+
+  // Return generic error to prevent email enumeration
   if (!user) {
     const error = new Error('Invalid email or password');
     error.statusCode = 401;
@@ -134,9 +162,11 @@ export const forgotPassword = async (email) => {
     throw error;
   }
 
-  const user = await AuthModel.findUserByEmail(email);
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await AuthModel.findUserByEmail(normalizedEmail);
+
   if (!user) {
-    // For security, still return a success message so attackers cannot enumerate emails
+    // Return generic success to avoid leaking email existence
     return {
       message: 'If an account exists with this email, password reset instructions have been generated.'
     };
@@ -149,8 +179,8 @@ export const forgotPassword = async (email) => {
   await AuthModel.logUserAudit(user.id, 'FORGOT_PASSWORD_REQUESTED', { email: user.email });
 
   return {
-    message: 'Password reset token generated successfully.',
-    resetToken // Returned for development/demo workflow
+    message: 'If an account exists with this email, password reset instructions have been generated.',
+    resetToken // Exposed for development/testing convenience
   };
 };
 

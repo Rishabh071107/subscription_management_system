@@ -1,18 +1,29 @@
 import * as AuthService from './auth.service.js';
-import { successResponse, errorResponse } from '../../utils/response.js';
+import { successResponse } from '../../utils/response.js';
 
-export const register = async (req, res, next) => {
+const getCookieOptions = () => ({
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+  maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+});
+
+export const signup = async (req, res, next) => {
   try {
     const result = await AuthService.registerCustomer(req.body);
+    res.cookie('token', result.token, getCookieOptions());
     return successResponse(res, 201, 'Customer registration successful', result);
   } catch (error) {
     next(error);
   }
 };
 
+export const register = signup; // Alias for backward compatibility
+
 export const login = async (req, res, next) => {
   try {
     const result = await AuthService.loginUser(req.body);
+    res.cookie('token', result.token, getCookieOptions());
     return successResponse(res, 200, 'Login successful', result);
   } catch (error) {
     next(error);
@@ -21,8 +32,7 @@ export const login = async (req, res, next) => {
 
 export const getMe = async (req, res, next) => {
   try {
-    const user = await AuthService.getProfile(req.user.id);
-    return successResponse(res, 200, 'User profile retrieved successfully', { user });
+    return successResponse(res, 200, 'User profile retrieved successfully', { user: req.user });
   } catch (error) {
     next(error);
   }
@@ -47,6 +57,6 @@ export const resetPassword = async (req, res, next) => {
 };
 
 export const logout = async (req, res) => {
-  // Stateless JWT logout - frontend clears token from local storage / memory
+  res.clearCookie('token', getCookieOptions());
   return successResponse(res, 200, 'Logout successful');
 };

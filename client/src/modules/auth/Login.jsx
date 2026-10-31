@@ -1,142 +1,173 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { useNotification } from '../../context/NotificationContext.jsx';
+import Button from '../../components/Button.jsx';
+import Input from '../../components/Input.jsx';
+import Alert from '../../components/Alert.jsx';
 
-const Login = () => {
+export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const { login } = useAuth();
-  const { success, error } = useNotification();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMessage('');
+
     if (!email || !password) {
-      error('Please fill in both email and password');
+      setErrorMessage('Please enter both email and password');
       return;
     }
 
     try {
       setLoading(true);
       const user = await login(email, password);
-      success(`Welcome back, ${user.firstName}!`);
-      navigate('/dashboard');
+      // Role-based redirect according to foundations.md
+      if (user?.role === 'ADMIN') {
+        navigate('/admin/dashboard');
+      } else if (user?.role === 'STAFF') {
+        navigate('/customers');
+      } else if (user?.role === 'CUSTOMER') {
+        navigate('/portal/dashboard');
+      } else {
+        navigate('/portal/dashboard');
+      }
     } catch (err) {
-      error(err.message || 'Login failed. Please check your credentials.');
+      setErrorMessage(err.message || 'Invalid email or password');
     } finally {
       setLoading(false);
     }
   };
 
-  const setDemoUser = (demoEmail, demoPass) => {
+  const handleDemoUser = (demoEmail, demoPass) => {
     setEmail(demoEmail);
     setPassword(demoPass);
+    setErrorMessage('');
   };
 
   return (
     <div>
-      <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem', textAlign: 'center' }}>
-        Sign In to Your Account
+      <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '6px', textAlign: 'center' }}>
+        Sign In to Brightloop
       </h2>
-      <p style={{ textAlign: 'center', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
-        Enter your credentials to access the system
+      <p style={{ textAlign: 'center', marginBottom: '20px', color: 'var(--color-text-secondary)', fontSize: '13px' }}>
+        Enter your credentials to access your workspace
       </p>
 
-      {/* Quick Demo Credentials Bar */}
+      {errorMessage && (
+        <Alert type="danger" onClose={() => setErrorMessage('')}>
+          {errorMessage}
+        </Alert>
+      )}
+
+      {/* Quick Demo Credentials for Reviewers */}
       <div
         style={{
-          background: '#f5f3ff',
-          border: '1px dashed #c4b5fd',
-          borderRadius: '8px',
-          padding: '0.75rem',
-          marginBottom: '1.5rem',
-          fontSize: '0.75rem'
+          backgroundColor: 'var(--color-primary-light)',
+          border: '1px dashed var(--color-primary)',
+          borderRadius: 'var(--radius-default)',
+          padding: '10px 12px',
+          marginBottom: '20px',
+          fontSize: '12px'
         }}
       >
-        <span style={{ fontWeight: 700, color: '#6d28d9', display: 'block', marginBottom: '0.35rem' }}>
-          Quick Demo Credentials:
+        <span style={{ fontWeight: 600, color: 'var(--color-primary)', display: 'block', marginBottom: '6px' }}>
+          Quick Demo Accounts:
         </span>
-        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem' }}
-            onClick={() => setDemoUser('admin@brightloop.io', 'Brightloop@2026')}
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => handleDemoUser('admin@brightloop.io', 'Brightloop@2026')}
           >
             Admin
-          </button>
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem' }}
-            onClick={() => setDemoUser('staff@brightloop.io', 'Staff@2026!')}
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => handleDemoUser('staff@brightloop.io', 'Staff@2026!')}
           >
             Staff
-          </button>
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem' }}
-            onClick={() => setDemoUser('customer@acmecorp.com', 'Customer@2026!')}
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => handleDemoUser('customer@acmecorp.com', 'Customer@2026!')}
           >
             Customer
-          </button>
+          </Button>
         </div>
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label className="form-label" htmlFor="email">Email Address</label>
-          <input
-            id="email"
-            type="email"
-            className="form-control"
-            placeholder="name@company.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
+        <Input
+          label="Email Address"
+          id="email"
+          type="email"
+          name="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="name@company.com"
+          required
+        />
 
-        <div className="form-group">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <label className="form-label" htmlFor="password">Password</label>
-            <Link to="/forgot-password" style={{ fontSize: '0.8rem', color: '#7c3aed' }}>
-              Forgot password?
-            </Link>
-          </div>
-          <input
+        <div style={{ position: 'relative' }}>
+          <Input
+            label="Password"
             id="password"
-            type="password"
-            className="form-control"
-            placeholder="••••••••"
+            type={showPassword ? 'text' : 'password'}
+            name="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
             required
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            style={{
+              position: 'absolute',
+              right: '10px',
+              top: '32px',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--color-text-secondary)',
+              fontSize: '12px',
+              fontFamily: 'var(--font-ui)'
+            }}
+          >
+            {showPassword ? 'Hide' : 'Show'}
+          </button>
         </div>
 
-        <button
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px', marginTop: '-6px' }}>
+          <Link to="/forgot-password" style={{ fontSize: '12px', fontWeight: 500 }}>
+            Forgot password?
+          </Link>
+        </div>
+
+        <Button
           type="submit"
-          className="btn btn-primary"
-          style={{ width: '100%', marginTop: '0.5rem' }}
-          disabled={loading}
+          variant="primary"
+          block
+          loading={loading}
         >
-          {loading ? 'Signing In...' : 'Sign In'}
-        </button>
+          Sign In
+        </Button>
       </form>
 
-      <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.875rem', color: '#64748b' }}>
+      <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '13px', color: 'var(--color-text-secondary)' }}>
         Don't have an account?{' '}
-        <Link to="/register" style={{ fontWeight: 600, color: '#7c3aed' }}>
+        <Link to="/signup" style={{ fontWeight: 600 }}>
           Create Customer Account
         </Link>
       </div>
     </div>
   );
-};
-
-export default Login;
+}
