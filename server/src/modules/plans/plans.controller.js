@@ -46,3 +46,12 @@ export const updatePlanStatus = async (req, res, next) => {
     next(error);
   }
 };
+
+export const deletePlan = async (req, res, next) => {
+  try {
+    const result = await PlansService.removeOrClosePlan(req.params.id);
+    return successResponse(res, 200, result.message, result);
+  } catch (error) {
+    next(error);
+  }
+};

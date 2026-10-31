@@ -6,7 +6,9 @@ import LoadingSpinner from '../../components/LoadingSpinner.jsx';
 import Badge from '../../components/Badge.jsx';
 import Pagination from '../../components/Pagination.jsx';
 import EmptyState from '../../components/EmptyState.jsx';
+import ConfirmDialog from '../../components/ConfirmDialog.jsx';
 import PlanFormModal from './PlanFormModal.jsx';
+import PlanDetailModal from './PlanDetailModal.jsx';
 import { useNotification } from '../../context/NotificationContext.jsx';
 
 const PlanList = () => {
@@ -15,13 +17,19 @@ const PlanList = () => {
   const [loading, setLoading] = useState(true);
 
   // Filters
+  const [search, setSearch] = useState('');
   const [intervalFilter, setIntervalFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
 
-  // Modal
+  // Modals
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [planToEdit, setPlanToEdit] = useState(null);
+  const [detailPlan, setDetailPlan] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+  // Delete / Close dialog
+  const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, plan: null, loading: false });
 
   const { isAdmin, isStaff, isCustomer } = useAuth();
   const { success, error } = useNotification();
@@ -34,6 +42,7 @@ const PlanList = () => {
         page: page.toString(),
         limit: '10'
       });
+      if (search) params.append('search', search);
       if (intervalFilter) params.append('billingInterval', intervalFilter);
       if (statusFilter) params.append('status', statusFilter);
 
@@ -51,13 +60,38 @@ const PlanList = () => {
     fetchPlans();
   }, [page, intervalFilter, statusFilter]);
 
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    setPage(1);
+    fetchPlans();
+  };
+
   const handleStatusAction = async (plan, action) => {
     try {
       const res = await api.patch(`/plans/${plan.id}/status`, { action });
       success(res.message || `Plan ${action.toLowerCase()}d successfully`);
+      if (detailPlan && detailPlan.id === plan.id) {
+        setDetailPlan(res.data.plan);
+      }
       fetchPlans();
     } catch (err) {
       error(err.message || `Failed to ${action.toLowerCase()} plan`);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    const { plan } = deleteDialog;
+    if (!plan) return;
+
+    try {
+      setDeleteDialog((prev) => ({ ...prev, loading: true }));
+      const res = await api.delete(`/plans/${plan.id}`);
+      success(res.message || 'Plan removed successfully');
+      setDeleteDialog({ isOpen: false, plan: null, loading: false });
+      fetchPlans();
+    } catch (err) {
+      error(err.message || 'Failed to remove plan');
+      setDeleteDialog((prev) => ({ ...prev, loading: false }));
     }
   };
 
@@ -69,6 +103,11 @@ const PlanList = () => {
   const handleOpenEdit = (plan) => {
     setPlanToEdit(plan);
     setIsFormModalOpen(true);
+  };
+
+  const handleOpenDetail = (plan) => {
+    setDetailPlan(plan);
+    setIsDetailModalOpen(true);
   };
 
   const handleCustomerSubscribe = (plan) => {
@@ -91,8 +130,19 @@ const PlanList = () => {
 
       <div className="card">
         <div className="card-body">
-          <div className="action-bar" style={{ margin: 0 }}>
+          <form onSubmit={handleSearchSubmit} className="action-bar" style={{ margin: 0 }}>
             <div className="filter-group">
+              <div className="search-input-wrapper">
+                <span className="search-icon">🔍</span>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search plans by name, code or description..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+
               <select
                 className="form-select"
                 style={{ width: 'auto' }}
@@ -119,8 +169,12 @@ const PlanList = () => {
                   <option value="CLOSED">Closed</option>
                 </select>
               )}
+
+              <button type="submit" className="btn btn-secondary">
+                Search
+              </button>
             </div>
-          </div>
+          </form>
         </div>
       </div>
 
@@ -173,23 +227,40 @@ const PlanList = () => {
                 </div>
               </div>
 
-              <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid #e2e8f0', background: '#fdfcff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid #e2e8f0', background: '#fdfcff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                 {isCustomer ? (
-                  <button
-                    className="btn btn-primary"
-                    style={{ width: '100%' }}
-                    onClick={() => handleCustomerSubscribe(plan)}
-                  >
-                    Select & Request Quote
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
+                    <button
+                      className="btn btn-outline"
+                      style={{ flex: 1 }}
+                      onClick={() => handleOpenDetail(plan)}
+                    >
+                      View Details
+                    </button>
+                    <button
+                      className="btn btn-primary"
+                      style={{ flex: 2 }}
+                      onClick={() => handleCustomerSubscribe(plan)}
+                    >
+                      Select & Request Quote
+                    </button>
+                  </div>
                 ) : (
                   <>
-                    <button
-                      className="btn btn-outline btn-sm"
-                      onClick={() => handleOpenEdit(plan)}
-                    >
-                      Edit
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.4rem' }}>
+                      <button
+                        className="btn btn-outline btn-sm"
+                        onClick={() => handleOpenDetail(plan)}
+                      >
+                        View
+                      </button>
+                      <button
+                        className="btn btn-outline btn-sm"
+                        onClick={() => handleOpenEdit(plan)}
+                      >
+                        Edit
+                      </button>
+                    </div>
                     <div style={{ display: 'flex', gap: '0.4rem' }}>
                       {plan.status === 'ACTIVE' && (
                         <button
@@ -223,6 +294,15 @@ const PlanList = () => {
                           Reopen
                         </button>
                       )}
+                      {isAdmin && (
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => setDeleteDialog({ isOpen: true, plan, loading: false })}
+                          title="Delete or Close Plan"
+                        >
+                          Delete
+                        </button>
+                      )}
                     </div>
                   </>
                 )}
@@ -246,6 +326,26 @@ const PlanList = () => {
         onClose={() => setIsFormModalOpen(false)}
         onSaved={() => { setPage(1); fetchPlans(); }}
         planToEdit={planToEdit}
+      />
+
+      <PlanDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        plan={detailPlan}
+        onEdit={handleOpenEdit}
+        onStatusAction={handleStatusAction}
+        canManage={isAdmin || isStaff}
+      />
+
+      <ConfirmDialog
+        isOpen={deleteDialog.isOpen}
+        onClose={() => setDeleteDialog({ isOpen: false, plan: null, loading: false })}
+        onConfirm={handleConfirmDelete}
+        title="Remove or Close Plan"
+        message={`Are you sure you want to delete "${deleteDialog.plan?.name}" (${deleteDialog.plan?.code})? If this plan is already referenced by existing subscriptions, it will be safely closed to protect contract history.`}
+        confirmText="Confirm Delete / Close"
+        danger
+        loading={deleteDialog.loading}
       />
     </div>
   );

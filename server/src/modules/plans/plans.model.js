@@ -80,3 +80,9 @@ export const updatePlanStatus = async (id, status) => {
     data: { status }
   });
 };
+
+export const deletePlan = async (id) => {
+  return prisma.plan.delete({
+    where: { id }
+  });
+};

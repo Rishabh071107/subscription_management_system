@@ -37,6 +37,12 @@ export const findProducts = async ({ skip = 0, take = 10, search, isActive, prod
   return { total, products };
 };
 
+export const findVariantBySku = async (sku) => {
+  return prisma.productVariant.findUnique({
+    where: { sku }
+  });
+};
+
 export const findProductById = async (id) => {
   return prisma.product.findUnique({
     where: { id },

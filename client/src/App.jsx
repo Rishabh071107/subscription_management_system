@@ -76,6 +76,8 @@ export default function App() {
             {/* Internal Routes (Admin & Staff) */}
             <Route element={<InternalRoute />}>
               <Route element={<InternalLayout />}>
+                <Route path="/products" element={<ProductList />} />
+                <Route path="/plans" element={<PlanList />} />
                 <Route path="/customers" element={<UserList roleFilter="CUSTOMER" />} />
                 <Route path="/invoices" element={<InvoiceList />} />
                 <Route path="/invoices/:id" element={<InvoiceDetail />} />

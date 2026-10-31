@@ -14,5 +14,6 @@ router.get('/:id', PlansController.getPlanById);
 router.post('/', authorize('ADMIN', 'STAFF'), PlansController.createPlan);
 router.put('/:id', authorize('ADMIN', 'STAFF'), PlansController.updatePlan);
 router.patch('/:id/status', authorize('ADMIN', 'STAFF'), PlansController.updatePlanStatus);
+router.delete('/:id', authorize('ADMIN'), PlansController.deletePlan);
 
 export default router;

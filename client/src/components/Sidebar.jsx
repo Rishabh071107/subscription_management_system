@@ -36,6 +36,30 @@ export default function Sidebar({
           </NavLink>
         )}
 
+        <div className="internal-nav-section-title">Catalog & Subscriptions</div>
+        {(isAdmin || isStaff) && (
+          <>
+            <NavLink
+              to="/products"
+              className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
+              onClick={onClose}
+              title="Products & Services"
+            >
+              <span className="nav-icon">📦</span>
+              <span>Products & Services</span>
+            </NavLink>
+            <NavLink
+              to="/plans"
+              className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
+              onClick={onClose}
+              title="Subscription Plans"
+            >
+              <span className="nav-icon">📋</span>
+              <span>Subscription Plans</span>
+            </NavLink>
+          </>
+        )}
+
         <div className="internal-nav-section-title">User Management</div>
         {isAdmin && (
           <NavLink

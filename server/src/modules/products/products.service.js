@@ -67,6 +67,34 @@ export const createProduct = async (productData) => {
     throw error;
   }
 
+  const variantList = Array.isArray(variants) ? variants : [];
+  const skuSet = new Set();
+  for (const v of variantList) {
+    if (v.additionalPrice !== undefined) {
+      const addP = parseFloat(v.additionalPrice);
+      if (isNaN(addP) || addP < 0) {
+        const error = new Error('Variant additional price must be a non-negative number');
+        error.statusCode = 400;
+        throw error;
+      }
+    }
+    if (v.sku && v.sku.trim()) {
+      const cleanSku = v.sku.trim();
+      if (skuSet.has(cleanSku.toLowerCase())) {
+        const error = new Error(`Duplicate SKU "${cleanSku}" within the same product`);
+        error.statusCode = 400;
+        throw error;
+      }
+      skuSet.add(cleanSku.toLowerCase());
+      const existingSku = await ProductsModel.findVariantBySku(cleanSku);
+      if (existingSku) {
+        const error = new Error(`A product variant with SKU "${cleanSku}" already exists`);
+        error.statusCode = 409;
+        throw error;
+      }
+    }
+  }
+
   return ProductsModel.createProduct(
     {
       name: name.trim(),
@@ -76,7 +104,7 @@ export const createProduct = async (productData) => {
       notes: notes ? notes.trim() : null,
       isActive: true
     },
-    Array.isArray(variants) ? variants : []
+    variantList
   );
 };
 
@@ -161,6 +189,18 @@ export const removeOrDeactivateProduct = async (id) => {
   };
 };
 
+export const toggleProductStatus = async (id, isActive) => {
+  const existing = await ProductsModel.findProductById(id);
+  if (!existing) {
+    const error = new Error('Product not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const newStatus = typeof isActive === 'boolean' ? isActive : !existing.isActive;
+  return ProductsModel.updateProduct(id, { isActive: newStatus });
+};
+
 export const addVariant = async (productId, variantData) => {
   const product = await ProductsModel.findProductById(productId);
   if (!product) {
@@ -182,11 +222,69 @@ export const addVariant = async (productId, variantData) => {
     throw error;
   }
 
+  const cleanSku = variantData.sku ? variantData.sku.trim() : null;
+  if (cleanSku) {
+    const existingSku = await ProductsModel.findVariantBySku(cleanSku);
+    if (existingSku) {
+      const error = new Error(`A product variant with SKU "${cleanSku}" already exists`);
+      error.statusCode = 409;
+      throw error;
+    }
+  }
+
   return ProductsModel.createVariant(productId, {
     name: variantData.name.trim(),
     additionalPrice: addPrice,
-    sku: variantData.sku ? variantData.sku.trim() : null
+    sku: cleanSku
   });
+};
+
+export const updateVariant = async (productId, variantId, variantData) => {
+  const product = await ProductsModel.findProductById(productId);
+  if (!product) {
+    const error = new Error('Product not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const updateData = {};
+  if (variantData.name !== undefined) {
+    if (!variantData.name || variantData.name.trim() === '') {
+      const error = new Error('Variant name cannot be empty');
+      error.statusCode = 400;
+      throw error;
+    }
+    updateData.name = variantData.name.trim();
+  }
+
+  if (variantData.additionalPrice !== undefined) {
+    const addPrice = parseFloat(variantData.additionalPrice);
+    if (isNaN(addPrice) || addPrice < 0) {
+      const error = new Error('Variant additional price must be a non-negative number');
+      error.statusCode = 400;
+      throw error;
+    }
+    updateData.additionalPrice = addPrice;
+  }
+
+  if (variantData.sku !== undefined) {
+    const cleanSku = variantData.sku ? variantData.sku.trim() : null;
+    if (cleanSku) {
+      const existingSku = await ProductsModel.findVariantBySku(cleanSku);
+      if (existingSku && existingSku.id !== variantId) {
+        const error = new Error(`A product variant with SKU "${cleanSku}" already exists`);
+        error.statusCode = 409;
+        throw error;
+      }
+    }
+    updateData.sku = cleanSku;
+  }
+
+  if (variantData.isActive !== undefined) {
+    updateData.isActive = Boolean(variantData.isActive);
+  }
+
+  return ProductsModel.updateVariant(variantId, updateData);
 };
 
 export const removeVariant = async (variantId) => {
