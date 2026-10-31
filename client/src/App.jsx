@@ -32,6 +32,7 @@ import BillingRunsList from './modules/billing/BillingRunsList.jsx';
 import BillingRunDetail from './modules/billing/BillingRunDetail.jsx';
 import PaymentList from './modules/payments/PaymentList.jsx';
 import OverdueList from './modules/overdue/OverdueList.jsx';
+import FinancialReports from './modules/reports/FinancialReports.jsx';
 
 // Customer Portal Pages
 import CustomerDashboard from './modules/dashboard/CustomerDashboard.jsx';
@@ -81,6 +82,7 @@ export default function App() {
                 <Route path="/invoices/:id" element={<InvoiceDetail />} />
                 <Route path="/payments" element={<PaymentList />} />
                 <Route path="/overdue" element={<OverdueList />} />
+                <Route path="/reports" element={<FinancialReports />} />
                 <Route path="/profile" element={<ProfilePage />} />
               </Route>
             </Route>

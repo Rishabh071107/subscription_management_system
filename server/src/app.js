@@ -19,6 +19,7 @@ import paymentRoutes from './modules/payments/payments.routes.js';
 import overdueRoutes from './modules/overdue/overdue.routes.js';
 import discountRoutes from './modules/discounts/discounts.routes.js';
 import dashboardRoutes from './modules/dashboard/dashboard.routes.js';
+import reportsRoutes from './modules/reports/reports.routes.js';
 
 const app = express();
 
@@ -71,6 +72,8 @@ app.use('/api/v1/overdue', overdueRoutes);
 app.use('/api/discounts', discountRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/v1/reports/dashboard', dashboardRoutes);
+app.use('/api/reports', reportsRoutes);
+app.use('/api/v1/reports', reportsRoutes);
 
 // 404 Route Handler
 app.use('*', (req, res) => {

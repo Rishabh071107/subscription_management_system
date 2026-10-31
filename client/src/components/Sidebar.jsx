@@ -110,6 +110,18 @@ export default function Sidebar({
           </NavLink>
         )}
 
+        {(isAdmin || isStaff) && (
+          <NavLink
+            to="/reports"
+            className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            title="Reports & Analytics"
+          >
+            <span className="nav-icon">📈</span>
+            <span>Reports & Analytics</span>
+          </NavLink>
+        )}
+
         <div className="internal-nav-section-title">Settings & Account</div>
         <NavLink
           to="/profile"
