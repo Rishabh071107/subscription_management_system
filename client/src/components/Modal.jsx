@@ -1,20 +1,33 @@
 import React, { useEffect } from 'react';
 
-const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
+export default function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
+  size = 'md', // 'sm' | 'md' | 'lg'
+  footer
+}) {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && isOpen) {
         onClose();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
       <div
         className={`modal-content ${size === 'lg' ? 'modal-lg' : ''}`}
         onClick={(e) => e.stopPropagation()}
@@ -26,9 +39,8 @@ const Modal = ({ isOpen, onClose, title, children, size = 'md' }) => {
           </button>
         </div>
         <div className="modal-body">{children}</div>
+        {footer && <div className="card-footer" style={{ borderTop: '1px solid var(--border-default)' }}>{footer}</div>}
       </div>
     </div>
   );
-};
-
-export default Modal;
+}

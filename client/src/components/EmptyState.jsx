@@ -1,18 +1,17 @@
 import React from 'react';
 
-const EmptyState = ({ title = 'No records found', description, actionText, onAction, icon = '📂' }) => {
+export default function EmptyState({
+  title = 'No items found',
+  message = 'There are no records available to display at this time.',
+  icon = '📁',
+  action
+}) {
   return (
-    <div className="empty-state">
-      <div className="empty-state-icon">{icon}</div>
-      <h3 className="empty-state-title">{title}</h3>
-      {description && <p className="empty-state-desc">{description}</p>}
-      {actionText && onAction && (
-        <button className="btn btn-primary" onClick={onAction}>
-          {actionText}
-        </button>
-      )}
+    <div className="state-container">
+      <div className="state-icon">{icon}</div>
+      <h3 className="state-title">{title}</h3>
+      <p className="state-message">{message}</p>
+      {action && <div style={{ marginTop: 8 }}>{action}</div>}
     </div>
   );
-};
-
-export default EmptyState;
+}
