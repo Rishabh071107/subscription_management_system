@@ -162,3 +162,4 @@ export default function FollowUpModal({ isOpen, onClose, invoice, onSaved }) {
     </Modal>
   );
 }
+

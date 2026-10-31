@@ -47,3 +47,4 @@ export const validateAddFollowUp = (data) => {
     throw error;
   }
 };
+

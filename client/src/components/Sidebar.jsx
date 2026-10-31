@@ -98,6 +98,18 @@ export default function Sidebar({
           </NavLink>
         )}
 
+        {(isAdmin || isStaff) && (
+          <NavLink
+            to="/overdue"
+            className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            title="Collections & Overdue"
+          >
+            <span className="nav-icon">⚠️</span>
+            <span>Overdue & Collections</span>
+          </NavLink>
+        )}
+
         <div className="internal-nav-section-title">Settings & Account</div>
         <NavLink
           to="/profile"

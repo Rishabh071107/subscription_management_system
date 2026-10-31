@@ -191,7 +191,7 @@ export const findOverdueInvoiceById = async (id) => {
         select: { id: true, firstName: true, lastName: true, email: true, phone: true }
       },
       subscription: {
-        select: { id: true, subscriptionNumber: true, status: true, currentPeriodStart: true, currentPeriodEnd: true }
+        select: { id: true, subscriptionNumber: true, status: true, startDate: true, expiryDate: true, nextBillingDate: true }
       },
       lines: true,
       payments: {

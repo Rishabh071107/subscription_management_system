@@ -23,3 +23,4 @@ router.get('/invoices/:id', OverdueController.getOverdueInvoiceById);
 router.post('/invoices/:id/follow-up', authorize('ADMIN', 'STAFF'), OverdueController.createFollowUpNote);
 
 export default router;
+
