@@ -255,11 +255,31 @@ test('Variant lifecycle: POST, PUT, and DELETE on /api/products/:id/variants', a
 
 test('Safe deactivation: Product with existing subscription reference is deactivated rather than deleted', async () => {
   // Check the seeded product referenced by the seeded subscription
-  const seededSub = await prisma.subscription.findFirst({
+  let seededSub = await prisma.subscription.findFirst({
     include: { lines: true }
   });
   assert.ok(seededSub, 'Seeded subscription should exist');
-  const referencedProductId = seededSub.lines[0].productId;
+  
+  // If subscription has no lines, attach a line or find product
+  let referencedProductId;
+  if (seededSub.lines && seededSub.lines.length > 0) {
+    referencedProductId = seededSub.lines[0].productId;
+  } else {
+    const prod = await prisma.product.findFirst();
+    assert.ok(prod, 'A product should exist');
+    await prisma.subscriptionLine.create({
+      data: {
+        subscriptionId: seededSub.id,
+        productId: prod.id,
+        quantity: 1,
+        unitPrice: 10,
+        taxRate: 0,
+        subtotal: 10,
+        total: 10
+      }
+    });
+    referencedProductId = prod.id;
+  }
 
   const deleteRes = await fetch(`${baseUrl}/api/products/${referencedProductId}`, {
     method: 'DELETE',
