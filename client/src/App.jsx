@@ -26,6 +26,11 @@ import AdminDashboard from './modules/dashboard/AdminDashboard.jsx';
 import UserList from './modules/users/UserList.jsx';
 import ProfilePage from './modules/profile/ProfilePage.jsx';
 import SettingsPage from './modules/settings/SettingsPage.jsx';
+import ProductList from './modules/products/ProductList.jsx';
+import PlanList from './modules/plans/PlanList.jsx';
+import SubscriptionList from './modules/subscriptions/SubscriptionList.jsx';
+import SubscriptionDetail from './modules/subscriptions/SubscriptionDetail.jsx';
+import QuotationList from './modules/quotations/QuotationList.jsx';
 import InvoiceList from './modules/invoices/InvoiceList.jsx';
 import InvoiceDetail from './modules/invoices/InvoiceDetail.jsx';
 import BillingRunsList from './modules/billing/BillingRunsList.jsx';
@@ -78,6 +83,9 @@ export default function App() {
               <Route element={<InternalLayout />}>
                 <Route path="/products" element={<ProductList />} />
                 <Route path="/plans" element={<PlanList />} />
+                <Route path="/subscriptions" element={<SubscriptionList />} />
+                <Route path="/subscriptions/:id" element={<SubscriptionDetail />} />
+                <Route path="/quotations" element={<QuotationList />} />
                 <Route path="/customers" element={<UserList roleFilter="CUSTOMER" />} />
                 <Route path="/invoices" element={<InvoiceList />} />
                 <Route path="/invoices/:id" element={<InvoiceDetail />} />

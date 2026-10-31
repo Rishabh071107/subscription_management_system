@@ -15,6 +15,20 @@ export default function TopNavbar({
   const isAdmin = user?.role === 'ADMIN';
   const isInternal = user?.role === 'ADMIN' || user?.role === 'STAFF';
 
+  const linkStyle = ({ isActive }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '6px 12px',
+    borderRadius: '6px',
+    fontSize: '13px',
+    fontWeight: 600,
+    textDecoration: 'none',
+    background: isActive ? '#714B67' : 'transparent',
+    color: isActive ? '#ffffff' : '#475569',
+    transition: 'all 0.15s ease'
+  });
+
   return (
     <header className="internal-topbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', height: '64px', borderBottom: '1px solid #e2e8f0', background: '#ffffff', gap: '16px' }}>
       <div className="internal-topbar-left" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -26,9 +40,9 @@ export default function TopNavbar({
           title="Toggle Navigation"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
           </svg>
         </button>
         <div className="workspace-badge" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -40,124 +54,38 @@ export default function TopNavbar({
         {isInternal && (
           <nav className="topbar-nav-links" style={{ display: 'flex', gap: '6px', alignItems: 'center', marginLeft: '12px', flexWrap: 'wrap' }}>
             {isAdmin && (
-              <NavLink
-                to="/admin/dashboard"
-                style={({ isActive }) => ({
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '6px 12px',
-                  borderRadius: '6px',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  textDecoration: 'none',
-                  background: isActive ? '#714B67' : 'transparent',
-                  color: isActive ? '#ffffff' : '#475569',
-                  transition: 'all 0.15s ease'
-                })}
-              >
+              <NavLink to="/admin/dashboard" style={linkStyle}>
                 <span>📊</span>
                 <span>Dashboard</span>
               </NavLink>
             )}
-
-            <NavLink
-              to="/products"
-              style={({ isActive }) => ({
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '6px 12px',
-                borderRadius: '6px',
-                fontSize: '13px',
-                fontWeight: 600,
-                textDecoration: 'none',
-                background: isActive ? '#714B67' : 'transparent',
-                color: isActive ? '#ffffff' : '#475569',
-                transition: 'all 0.15s ease'
-              })}
-            >
-              <span>📦</span>
+            <NavLink to="/products" style={linkStyle}>
+              <span className="nav-icon">📦</span>
               <span>Products</span>
             </NavLink>
-
-            <NavLink
-              to="/plans"
-              style={({ isActive }) => ({
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '6px 12px',
-                borderRadius: '6px',
-                fontSize: '13px',
-                fontWeight: 600,
-                textDecoration: 'none',
-                background: isActive ? '#714B67' : 'transparent',
-                color: isActive ? '#ffffff' : '#475569',
-                transition: 'all 0.15s ease'
-              })}
-            >
-              <span>📋</span>
+            <NavLink to="/plans" style={linkStyle}>
+              <span className="nav-icon">📋</span>
               <span>Plans</span>
             </NavLink>
-            <NavLink
-              to="/subscriptions"
-              style={({ isActive }) => ({
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '6px 12px',
-                borderRadius: '6px',
-                fontSize: '13px',
-                fontWeight: 600,
-                textDecoration: 'none',
-                background: isActive ? '#714B67' : 'transparent',
-                color: isActive ? '#ffffff' : '#475569',
-                transition: 'all 0.15s ease'
-              })}
-            >
+            <NavLink to="/subscriptions" style={linkStyle}>
               <span className="nav-icon">📆</span>
               <span>Subscriptions</span>
             </NavLink>
-
-            <NavLink
-              to="/customers"
-              style={({ isActive }) => ({
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '6px 12px',
-                borderRadius: '6px',
-                fontSize: '13px',
-                fontWeight: 600,
-                textDecoration: 'none',
-                background: isActive ? '#714B67' : 'transparent',
-                color: isActive ? '#ffffff' : '#475569',
-                transition: 'all 0.15s ease'
-              })}
-            >
-              <span>🏢</span>
+            <NavLink to="/invoices" style={linkStyle}>
+              <span className="nav-icon">🧾</span>
+              <span>Invoices</span>
+            </NavLink>
+            <NavLink to="/payments" style={linkStyle}>
+              <span className="nav-icon">💳</span>
+              <span>Payments</span>
+            </NavLink>
+            <NavLink to="/customers" style={linkStyle}>
+              <span className="nav-icon">🏢</span>
               <span>Customers</span>
             </NavLink>
-
             {isAdmin && (
-              <NavLink
-                to="/admin/staff"
-                style={({ isActive }) => ({
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '6px 12px',
-                  borderRadius: '6px',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  textDecoration: 'none',
-                  background: isActive ? '#714B67' : 'transparent',
-                  color: isActive ? '#ffffff' : '#475569',
-                  transition: 'all 0.15s ease'
-                })}
-              >
-                <span>👥</span>
+              <NavLink to="/admin/staff" style={linkStyle}>
+                <span className="nav-icon">👥</span>
                 <span>Staff</span>
               </NavLink>
             )}
