@@ -22,6 +22,14 @@ export const getRevenueReport = async (query = {}) => {
   const start = startDate || fromDate ? new Date(startDate || fromDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const end = endDate || toDate ? new Date(endDate || toDate) : new Date();
 
+  // If specific date boundary was passed as YYYY-MM-DD, set to start/end of day
+  if (startDate || fromDate) {
+    start.setHours(0, 0, 0, 0);
+  }
+  if (endDate || toDate) {
+    end.setHours(23, 59, 59, 999);
+  }
+
   const payments = await DashboardModel.getRevenueReportData(start, end);
 
   // Group payments by date

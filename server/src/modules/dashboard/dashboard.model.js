@@ -7,15 +7,31 @@ export const getAdminMetrics = async (filters = {}) => {
   const paymentWhere = {};
   if (startDate || endDate) {
     paymentWhere.paymentDate = {};
-    if (startDate) paymentWhere.paymentDate.gte = new Date(startDate);
-    if (endDate) paymentWhere.paymentDate.lte = new Date(endDate);
+    if (startDate) {
+      const s = new Date(startDate);
+      s.setHours(0, 0, 0, 0);
+      paymentWhere.paymentDate.gte = s;
+    }
+    if (endDate) {
+      const e = new Date(endDate);
+      e.setHours(23, 59, 59, 999);
+      paymentWhere.paymentDate.lte = e;
+    }
   }
 
   const invoiceWhere = { status: { not: 'CANCELLED' } };
   if (startDate || endDate) {
     invoiceWhere.createdAt = {};
-    if (startDate) invoiceWhere.createdAt.gte = new Date(startDate);
-    if (endDate) invoiceWhere.createdAt.lte = new Date(endDate);
+    if (startDate) {
+      const s = new Date(startDate);
+      s.setHours(0, 0, 0, 0);
+      invoiceWhere.createdAt.gte = s;
+    }
+    if (endDate) {
+      const e = new Date(endDate);
+      e.setHours(23, 59, 59, 999);
+      invoiceWhere.createdAt.lte = e;
+    }
   }
 
   const [
@@ -186,8 +202,16 @@ export const getPaymentsSummaryData = async (filters = {}) => {
   const where = {};
   if (startDate || endDate) {
     where.paymentDate = {};
-    if (startDate) where.paymentDate.gte = new Date(startDate);
-    if (endDate) where.paymentDate.lte = new Date(endDate);
+    if (startDate) {
+      const s = new Date(startDate);
+      s.setHours(0, 0, 0, 0);
+      where.paymentDate.gte = s;
+    }
+    if (endDate) {
+      const e = new Date(endDate);
+      e.setHours(23, 59, 59, 999);
+      where.paymentDate.lte = e;
+    }
   }
 
   const [byMethod, totalAgg, recentPayments] = await Promise.all([
@@ -259,6 +283,6 @@ export const getSubscriptionReportData = async () => {
     byPlan,
     activeCount: activeSubscriptions.length,
     estimatedMrr: Math.round(mrr * 100) / 100,
-    estimatedArr: Math.round(mrr * 12 * 100) / 100
+    estimatedArr: Math.round(Math.round(mrr * 100) / 100 * 12 * 100) / 100
   };
 };

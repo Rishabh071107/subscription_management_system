@@ -23,18 +23,24 @@ import AccessDenied from './modules/auth/AccessDenied.jsx';
 
 // Internal / Admin Pages
 import AdminDashboard from './modules/dashboard/AdminDashboard.jsx';
+import ReportsView from './modules/dashboard/ReportsView.jsx';
 import UserList from './modules/users/UserList.jsx';
 import ProfilePage from './modules/profile/ProfilePage.jsx';
 import SettingsPage from './modules/settings/SettingsPage.jsx';
+import ProductList from './modules/products/ProductList.jsx';
+import PlanList from './modules/plans/PlanList.jsx';
 import InvoiceList from './modules/invoices/InvoiceList.jsx';
 import InvoiceDetail from './modules/invoices/InvoiceDetail.jsx';
 import BillingRunsList from './modules/billing/BillingRunsList.jsx';
 import BillingRunDetail from './modules/billing/BillingRunDetail.jsx';
 import PaymentList from './modules/payments/PaymentList.jsx';
 import OverdueList from './modules/overdue/OverdueList.jsx';
+import NotificationList from './modules/notifications/NotificationList.jsx';
 
 // Customer Portal Pages
 import CustomerDashboard from './modules/dashboard/CustomerDashboard.jsx';
+import PortalSubscriptions from './modules/portal/PortalSubscriptions.jsx';
+import PortalSubscriptionDetail from './modules/portal/PortalSubscriptionDetail.jsx';
 import PortalProfilePage from './modules/portal/PortalProfilePage.jsx';
 
 export default function App() {
@@ -66,6 +72,7 @@ export default function App() {
             <Route element={<AdminRoute />}>
               <Route element={<InternalLayout />}>
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/reports" element={<ReportsView />} />
                 <Route path="/admin/staff" element={<UserList roleFilter="STAFF" />} />
                 <Route path="/admin/billing" element={<BillingRunsList />} />
                 <Route path="/admin/billing/:id" element={<BillingRunDetail />} />
@@ -76,6 +83,7 @@ export default function App() {
             {/* Internal Routes (Admin & Staff) */}
             <Route element={<InternalRoute />}>
               <Route element={<InternalLayout />}>
+                <Route path="/reports" element={<ReportsView />} />
                 <Route path="/products" element={<ProductList />} />
                 <Route path="/plans" element={<PlanList />} />
                 <Route path="/customers" element={<UserList roleFilter="CUSTOMER" />} />
@@ -83,6 +91,7 @@ export default function App() {
                 <Route path="/invoices/:id" element={<InvoiceDetail />} />
                 <Route path="/payments" element={<PaymentList />} />
                 <Route path="/overdue" element={<OverdueList />} />
+                <Route path="/notifications" element={<NotificationList />} />
                 <Route path="/profile" element={<ProfilePage />} />
               </Route>
             </Route>
@@ -91,9 +100,13 @@ export default function App() {
             <Route element={<CustomerPortalRoute />}>
               <Route element={<CustomerPortalLayout />}>
                 <Route path="/portal/dashboard" element={<CustomerDashboard />} />
+                <Route path="/portal/plans" element={<PlanList />} />
+                <Route path="/portal/subscriptions" element={<PortalSubscriptions />} />
+                <Route path="/portal/subscriptions/:id" element={<PortalSubscriptionDetail />} />
                 <Route path="/portal/invoices" element={<InvoiceList />} />
                 <Route path="/portal/invoices/:id" element={<InvoiceDetail />} />
                 <Route path="/portal/payments" element={<PaymentList isPortal />} />
+                <Route path="/portal/notifications" element={<NotificationList />} />
                 <Route path="/portal/profile" element={<PortalProfilePage />} />
               </Route>
             </Route>

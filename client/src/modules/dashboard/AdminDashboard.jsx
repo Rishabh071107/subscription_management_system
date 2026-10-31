@@ -100,6 +100,10 @@ export default function AdminDashboard() {
         subtitle="Real-time revenue reconciliation, active subscription yields, and collection monitoring"
         actions={
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <Link to="/reports" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <span>📈</span>
+              <span>Reports & Analytics</span>
+            </Link>
             <Button
               variant="secondary"
               onClick={handleRunBilling}

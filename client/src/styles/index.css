@@ -856,7 +856,9 @@ a:hover {
 /* 2. Internal Layout (Admin & Staff) */
 .internal-layout-root {
   display: flex;
+  height: 100vh;
   min-height: 100vh;
+  overflow: hidden;
   position: relative;
   background-color: var(--color-bg-page);
 }
@@ -871,6 +873,9 @@ a:hover {
 
 .internal-sidebar {
   width: 250px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
   background: linear-gradient(180deg, #714B67 0%, #54334C 100%);
   color: rgba(255, 255, 255, 0.85);
   display: flex;
@@ -899,6 +904,7 @@ a:hover {
 
 .internal-sidebar-header {
   height: 64px;
+  flex-shrink: 0;
   padding: 0 20px;
   display: flex;
   align-items: center;
@@ -922,10 +928,30 @@ a:hover {
 .internal-sidebar-nav {
   padding: 16px 10px;
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.internal-sidebar-nav::-webkit-scrollbar {
+  width: 5px;
+}
+
+.internal-sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.internal-sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.internal-sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
 }
 
 .internal-nav-section-title {
@@ -987,12 +1013,15 @@ a:hover {
   flex: 1;
   display: flex;
   flex-direction: column;
+  height: 100vh;
   min-width: 0;
+  overflow: hidden;
   background-color: var(--color-bg-page);
 }
 
 .internal-topbar {
   height: 64px;
+  flex-shrink: 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   background: linear-gradient(135deg, #714B67 0%, #5F3D56 100%);
   box-shadow: 0 2px 6px -1px rgba(0, 0, 0, 0.12), 0 2px 4px -2px rgba(113, 75, 103, 0.2);
@@ -1150,6 +1179,7 @@ a:hover {
 .internal-content-container {
   padding: 24px;
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 

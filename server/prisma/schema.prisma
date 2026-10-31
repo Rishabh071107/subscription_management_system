@@ -112,6 +112,7 @@ model User {
   customerInvoices     Invoice[]            @relation("CustomerInvoices")
   paymentsMade         Payment[]            @relation("CustomerPayments")
   paymentsRecorded     Payment[]            @relation("StaffRecordedPayments")
+  notifications        Notification[]
   discountUsages       DiscountUsage[]
 
   @@index([email])
@@ -472,5 +473,31 @@ model AuditLog {
   @@index([userId])
   @@index([action])
   @@index([entityType])
+  @@index([createdAt])
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model Notification {
+  id         String             @id @default(uuid())
+  userId     String?
+  user       User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  recipient  String
+  type       String
+  subject    String
+  body       String?            @db.Text
+  status     NotificationStatus @default(PENDING)
+  sentAt     DateTime?
+  metadata   String?            @db.Text
+  createdAt  DateTime           @default(now())
+
+  @@index([userId])
+  @@index([recipient])
+  @@index([type])
+  @@index([status])
   @@index([createdAt])
 }

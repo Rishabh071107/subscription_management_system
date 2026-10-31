@@ -23,7 +23,7 @@ export default function Sidebar({
       </div>
 
       <nav className="internal-sidebar-nav">
-        <div className="internal-nav-section-title">Overview</div>
+        <div className="internal-nav-section-title"></div>
         {isAdmin && (
           <NavLink
             to="/admin/dashboard"
@@ -36,7 +36,7 @@ export default function Sidebar({
           </NavLink>
         )}
 
-        <div className="internal-nav-section-title">Catalog & Subscriptions</div>
+       
         {(isAdmin || isStaff) && (
           <>
             <NavLink
@@ -60,7 +60,7 @@ export default function Sidebar({
           </>
         )}
 
-        <div className="internal-nav-section-title">User Management</div>
+        
         {isAdmin && (
           <NavLink
             to="/admin/staff"
@@ -85,7 +85,7 @@ export default function Sidebar({
           </NavLink>
         )}
 
-        <div className="internal-nav-section-title">Billing & Operations</div>
+        
         {isAdmin && (
           <NavLink
             to="/admin/billing"
@@ -131,6 +131,30 @@ export default function Sidebar({
           >
             <span className="nav-icon">⚠️</span>
             <span>Overdue & Collections</span>
+          </NavLink>
+        )}
+
+        {(isAdmin || isStaff) && (
+          <NavLink
+            to="/reports"
+            className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            title="Financial Reports & Analytics"
+          >
+            <span className="nav-icon">📈</span>
+            <span>Reports & Analytics</span>
+          </NavLink>
+        )}
+
+        {(isAdmin || isStaff) && (
+          <NavLink
+            to="/notifications"
+            className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            title="Audit & Notifications"
+          >
+            <span className="nav-icon">🔔</span>
+            <span>Notifications</span>
           </NavLink>
         )}
 

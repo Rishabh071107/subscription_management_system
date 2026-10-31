@@ -16,7 +16,7 @@ export default function TopNavbar({
   const isInternal = user?.role === 'ADMIN' || user?.role === 'STAFF';
 
   return (
-    <header className="internal-topbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', height: '64px', borderBottom: '1px solid #e2e8f0', background: '#ffffff', gap: '16px' }}>
+    <header className="internal-topbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', height: '64px', flexShrink: 0, borderBottom: '1px solid #e2e8f0', background: '#ffffff', gap: '16px' }}>
       <div className="internal-topbar-left" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <button
           type="button"
@@ -60,6 +60,26 @@ export default function TopNavbar({
                 <span>Dashboard</span>
               </NavLink>
             )}
+
+            <NavLink
+              to="/reports"
+              style={({ isActive }) => ({
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                fontSize: '13px',
+                fontWeight: 600,
+                textDecoration: 'none',
+                background: isActive ? '#714B67' : 'transparent',
+                color: isActive ? '#ffffff' : '#475569',
+                transition: 'all 0.15s ease'
+              })}
+            >
+              <span>📈</span>
+              <span>Reports</span>
+            </NavLink>
 
             <NavLink
               to="/products"

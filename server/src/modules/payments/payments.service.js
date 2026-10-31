@@ -1,6 +1,7 @@
 import * as PaymentsModel from './payments.model.js';
 import { validateRecordPayment, validatePaymentQuery } from './payments.validation.js';
 import prisma from '../../config/db.js';
+import * as NotificationsService from '../notifications/notifications.service.js';
 
 const VALID_METHODS = ['CASH', 'CARD', 'BANK_TRANSFER', 'UPI', 'OTHER'];
 
@@ -158,7 +159,7 @@ export const recordPayment = async (paymentData, currentUser) => {
   const finalTransactionId = transactionId ? transactionId.trim() : null;
 
   // Perform inside atomic database transaction
-  return prisma.$transaction(async (tx) => {
+  const recordedPayment = await prisma.$transaction(async (tx) => {
     const payment = await tx.payment.create({
       data: {
         paymentNumber,
@@ -195,4 +196,13 @@ export const recordPayment = async (paymentData, currentUser) => {
 
     return payment;
   });
+
+  // Dispatch payment confirmation notification via provider abstraction
+  try {
+    await NotificationsService.sendPaymentConfirmationNotification(recordedPayment, invoice, invoice.customer);
+  } catch (notifErr) {
+    console.warn('Payment confirmation notification delivery warning:', notifErr.message);
+  }
+
+  return recordedPayment;
 };

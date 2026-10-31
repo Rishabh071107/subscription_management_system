@@ -63,6 +63,12 @@ export default function CustomerPortalLayout() {
           Overview
         </NavLink>
         <NavLink
+          to="/portal/plans"
+          className={({ isActive }) => `portal-nav-link ${isActive ? 'active' : ''}`}
+        >
+          Plans & Pricing
+        </NavLink>
+        <NavLink
           to="/portal/invoices"
           className={({ isActive }) => `portal-nav-link ${isActive ? 'active' : ''}`}
         >
@@ -89,4 +95,3 @@ export default function CustomerPortalLayout() {
     </div>
   );
 }
-

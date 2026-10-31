@@ -1,5 +1,6 @@
 import * as InvoicesModel from './invoices.model.js';
 import prisma from '../../config/db.js';
+import * as NotificationsService from '../notifications/notifications.service.js';
 
 export const generateInvoiceNumber = async () => {
   const year = new Date().getFullYear();
@@ -425,6 +426,13 @@ export const sendInvoice = async (id, currentUser) => {
         details: `Invoice ${existing.invoiceNumber} marked as sent to customer ${existing.customer?.email}`
       }
     });
+  }
+
+  // Dispatch email notification via provider abstraction
+  try {
+    await NotificationsService.sendInvoiceNotification(existing, currentUser);
+  } catch (notifErr) {
+    console.warn('Invoice notification delivery warning:', notifErr.message);
   }
 
   return { success: true, message: `Invoice ${existing.invoiceNumber} sent successfully.` };
