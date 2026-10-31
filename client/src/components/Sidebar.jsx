@@ -1,115 +1,89 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 
-const Sidebar = () => {
-  const { user, isAdmin, isStaff, isCustomer, logout } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+export default function Sidebar({
+  isOpen = false,
+  isCollapsed = false,
+  onClose
+}) {
+  const { isAdmin, isStaff } = useAuth();
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-header">
-        <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
-          <rect width="48" height="48" rx="12" fill="url(#blGradSide)" />
-          <circle cx="24" cy="24" r="14" fill="none" stroke="#ffffff" strokeWidth="3" strokeDasharray="22 8" />
-          <circle cx="24" cy="24" r="6" fill="#ffffff" />
-          <defs>
-            <linearGradient id="blGradSide" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#7c3aed" />
-              <stop offset="100%" stopColor="#a78bfa" />
-            </linearGradient>
-          </defs>
-        </svg>
-        <span className="sidebar-logo">Brightloop</span>
+    <aside className={`internal-sidebar ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''}`.trim()}>
+      <div className="internal-sidebar-header">
+        <div className="internal-sidebar-logo">
+          <svg width="28" height="28" viewBox="0 0 48 48" fill="none" style={{ flexShrink: 0 }}>
+            <rect width="48" height="48" rx="10" fill="#FFFFFF" />
+            <circle cx="24" cy="24" r="14" fill="none" stroke="#714B67" strokeWidth="3" strokeDasharray="22 8" />
+            <circle cx="24" cy="24" r="6" fill="#714B67" />
+          </svg>
+          <span>Brightloop</span>
+        </div>
       </div>
 
-      <nav className="sidebar-nav">
-        <div className="nav-section-title">Main</div>
-        <NavLink to="/dashboard" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-          <span className="nav-item-icon">📊</span>
-          <span>Dashboard</span>
-        </NavLink>
+      <nav className="internal-sidebar-nav">
+        <div className="internal-nav-section-title">Overview</div>
+        {isAdmin && (
+          <NavLink
+            to="/admin/dashboard"
+            className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            title="Admin Dashboard"
+          >
+            <span className="nav-icon">📊</span>
+            <span>Admin Dashboard</span>
+          </NavLink>
+        )}
 
-        <div className="nav-section-title">Subscriptions & Sales</div>
-        <NavLink to="/subscriptions" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-          <span className="nav-item-icon">🔄</span>
-          <span>{isCustomer ? 'My Subscriptions' : 'Subscriptions'}</span>
-        </NavLink>
-
-        <NavLink to="/quotations" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-          <span className="nav-item-icon">📝</span>
-          <span>{isCustomer ? 'My Quotes' : 'Quotations'}</span>
-        </NavLink>
-
-        <NavLink to="/plans" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-          <span className="nav-item-icon">📦</span>
-          <span>Plans & Pricing</span>
-        </NavLink>
-
-        <div className="nav-section-title">Billing & Finance</div>
-        <NavLink to="/invoices" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-          <span className="nav-item-icon">📄</span>
-          <span>{isCustomer ? 'My Invoices' : 'Invoices'}</span>
-        </NavLink>
-
-        <NavLink to="/payments" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-          <span className="nav-item-icon">💳</span>
-          <span>{isCustomer ? 'Payment History' : 'Payments'}</span>
-        </NavLink>
-
-        {!isCustomer && (
-          <NavLink to="/discounts" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-            <span className="nav-item-icon">🏷️</span>
-            <span>Discounts</span>
+        <div className="internal-nav-section-title">User Management</div>
+        {isAdmin && (
+          <NavLink
+            to="/admin/staff"
+            className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            title="Staff Management"
+          >
+            <span className="nav-icon">👥</span>
+            <span>Staff Management</span>
           </NavLink>
         )}
 
         {(isAdmin || isStaff) && (
-          <>
-            <div className="nav-section-title">Operations</div>
-            <NavLink to="/products" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <span className="nav-item-icon">🧩</span>
-              <span>Products Catalog</span>
-            </NavLink>
+          <NavLink
+            to="/customers"
+            className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            title="Customers"
+          >
+            <span className="nav-icon">🏢</span>
+            <span>Customers</span>
+          </NavLink>
+        )}
 
-            <NavLink to="/users" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <span className="nav-item-icon">👥</span>
-              <span>{isAdmin ? 'Users & Staff' : 'Customers'}</span>
-            </NavLink>
+        <div className="internal-nav-section-title">Settings & Account</div>
+        <NavLink
+          to="/profile"
+          className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
+          onClick={onClose}
+          title="My Profile"
+        >
+          <span className="nav-icon">👤</span>
+          <span>My Profile</span>
+        </NavLink>
 
-            <NavLink to="/reports" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-              <span className="nav-item-icon">📈</span>
-              <span>Analytics & Reports</span>
-            </NavLink>
-          </>
+        {isAdmin && (
+          <NavLink
+            to="/settings"
+            className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
+            onClick={onClose}
+            title="System Settings"
+          >
+            <span className="nav-icon">⚙️</span>
+            <span>System Settings</span>
+          </NavLink>
         )}
       </nav>
-
-      <div className="sidebar-footer">
-        <div className="user-badge">
-          <div className="user-avatar">
-            {user?.firstName?.charAt(0) || 'U'}
-          </div>
-          <div className="user-info">
-            <div className="user-name">{user?.firstName} {user?.lastName}</div>
-            <div className="user-role-badge">{user?.role}</div>
-          </div>
-        </div>
-        <button
-          onClick={handleLogout}
-          className="btn btn-outline btn-sm"
-          style={{ width: '100%', marginTop: '0.75rem', fontSize: '0.8rem' }}
-        >
-          Sign Out
-        </button>
-      </div>
     </aside>
   );
-};
-
-export default Sidebar;
+}

@@ -24,9 +24,9 @@ export default function CustomerPortalLayout() {
       <header className="portal-topbar">
         <div className="portal-brand">
           <svg width="28" height="28" viewBox="0 0 48 48" fill="none">
-            <rect width="48" height="48" rx="8" fill="#714B67" />
-            <circle cx="24" cy="24" r="14" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeDasharray="22 8" />
-            <circle cx="24" cy="24" r="6" fill="#FFFFFF" />
+            <rect width="48" height="48" rx="8" fill="#FFFFFF" />
+            <circle cx="24" cy="24" r="14" fill="none" stroke="#714B67" strokeWidth="3" strokeDasharray="22 8" />
+            <circle cx="24" cy="24" r="6" fill="#714B67" />
           </svg>
           <span>Brightloop Portal</span>
         </div>
@@ -35,7 +35,7 @@ export default function CustomerPortalLayout() {
           <div className="user-menu-badge">
             <div className="avatar-circle">{userInitials}</div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text-primary)' }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#FFFFFF' }}>
                 {user?.firstName} {user?.lastName}
               </span>
               <div>
