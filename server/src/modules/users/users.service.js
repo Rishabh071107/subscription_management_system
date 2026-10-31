@@ -1,13 +1,13 @@
 import bcrypt from 'bcryptjs';
 import * as UsersModel from './users.model.js';
 import { isValidEmail, validatePassword } from '../../utils/validators.js';
+import prisma from '../../config/db.js';
 
 export const listUsers = async ({ page = 1, limit = 10, role, isActive, search }, currentUser) => {
   const pageNum = Math.max(1, parseInt(page, 10) || 1);
   const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 10));
   const skip = (pageNum - 1) * limitNum;
 
-  // If currentUser is STAFF, staff can view customers (or other staff if permitted), but cannot manage admins
   let queryRole = role;
   if (currentUser.role === 'STAFF' && !role) {
     queryRole = 'CUSTOMER'; // By default, staff searches customer records
@@ -87,7 +87,8 @@ export const createStaff = async ({ email, password, firstName, lastName, phone,
     throw error;
   }
 
-  const existingUser = await UsersModel.findUserByEmail(email);
+  const normalizedEmail = email.toLowerCase().trim();
+  const existingUser = await UsersModel.findUserByEmail(normalizedEmail);
   if (existingUser) {
     const error = new Error('A user with this email address already exists');
     error.statusCode = 409;
@@ -98,8 +99,8 @@ export const createStaff = async ({ email, password, firstName, lastName, phone,
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
 
-  return UsersModel.createStaffUser({
-    email,
+  const newStaff = await UsersModel.createStaffUser({
+    email: normalizedEmail,
     password: hashedPassword,
     firstName: firstName.trim(),
     lastName: lastName.trim(),
@@ -107,6 +108,23 @@ export const createStaff = async ({ email, password, firstName, lastName, phone,
     role: targetRole,
     isActive: true
   });
+
+  // Audit event for sensitive staff creation
+  try {
+    await prisma.auditLog.create({
+      data: {
+        userId: currentUser.id,
+        action: 'STAFF_CREATED',
+        entityType: 'User',
+        entityId: newStaff.id,
+        details: JSON.stringify({ email: newStaff.email, role: targetRole })
+      }
+    });
+  } catch (auditErr) {
+    console.warn('Failed to record audit log:', auditErr.message);
+  }
+
+  return newStaff;
 };
 
 export const updateUser = async (id, updateData, currentUser) => {
@@ -145,7 +163,23 @@ export const updateUser = async (id, updateData, currentUser) => {
     }
   }
 
-  return UsersModel.updateUser(id, sanitizedData);
+  const updatedUser = await UsersModel.updateUser(id, sanitizedData);
+
+  try {
+    await prisma.auditLog.create({
+      data: {
+        userId: currentUser.id,
+        action: 'PROFILE_UPDATED',
+        entityType: 'User',
+        entityId: id,
+        details: JSON.stringify(sanitizedData)
+      }
+    });
+  } catch (auditErr) {
+    console.warn('Failed to record audit log:', auditErr.message);
+  }
+
+  return updatedUser;
 };
 
 export const toggleUserStatus = async (id, isActive, currentUser) => {
@@ -168,5 +202,21 @@ export const toggleUserStatus = async (id, isActive, currentUser) => {
     throw error;
   }
 
-  return UsersModel.updateUserStatus(id, Boolean(isActive));
+  const updated = await UsersModel.updateUserStatus(id, Boolean(isActive));
+
+  try {
+    await prisma.auditLog.create({
+      data: {
+        userId: currentUser.id,
+        action: isActive ? 'ACCOUNT_ACTIVATED' : 'ACCOUNT_DEACTIVATED',
+        entityType: 'User',
+        entityId: id,
+        details: JSON.stringify({ email: existing.email, role: existing.role })
+      }
+    });
+  } catch (auditErr) {
+    console.warn('Failed to record audit log:', auditErr.message);
+  }
+
+  return updated;
 };

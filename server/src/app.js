@@ -6,6 +6,9 @@ import { errorHandler } from './middleware/errorHandler.js';
 // Feature route imports
 import authRoutes from './modules/auth/auth.routes.js';
 import userRoutes from './modules/users/users.routes.js';
+import adminStaffRoutes from './modules/admin/adminStaff.routes.js';
+import customersRoutes from './modules/customers/customers.routes.js';
+import profileRoutes from './modules/profile/profile.routes.js';
 import productRoutes from './modules/products/products.routes.js';
 import planRoutes from './modules/plans/plans.routes.js';
 import quotationRoutes from './modules/quotations/quotations.routes.js';
@@ -48,6 +51,9 @@ app.get('/api/health', (req, res) => {
 // Modular Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/admin/staff', adminStaffRoutes);
+app.use('/api/customers', customersRoutes);
+app.use('/api/profile', profileRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/plans', planRoutes);
 app.use('/api/quotations', quotationRoutes);

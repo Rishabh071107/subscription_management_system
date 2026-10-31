@@ -5,6 +5,10 @@ import LoadingSpinner from '../../components/LoadingSpinner.jsx';
 import Badge from '../../components/Badge.jsx';
 import Pagination from '../../components/Pagination.jsx';
 import EmptyState from '../../components/EmptyState.jsx';
+import PageHeader from '../../components/PageHeader.jsx';
+import Button from '../../components/Button.jsx';
+import Card from '../../components/Card.jsx';
+import ConfirmationDialog from '../../components/ConfirmationDialog.jsx';
 import CreateStaffModal from './CreateStaffModal.jsx';
 import { useNotification } from '../../context/NotificationContext.jsx';
 
@@ -19,11 +23,16 @@ const UserList = ({ roleFilter: initialRoleFilter = '' }) => {
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
 
-  // Modal
+  // Modals
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
+  const [selectedUserForStatus, setSelectedUserForStatus] = useState(null);
+  const [statusLoading, setStatusLoading] = useState(false);
 
   const { isAdmin, user: currentUser } = useAuth();
   const { success, error } = useNotification();
+
+  const isStaffView = initialRoleFilter === 'STAFF';
+  const isCustomerView = initialRoleFilter === 'CUSTOMER';
 
   const fetchUsers = async () => {
     try {
@@ -36,9 +45,10 @@ const UserList = ({ roleFilter: initialRoleFilter = '' }) => {
       if (roleFilter) params.append('role', roleFilter);
       if (statusFilter !== '') params.append('isActive', statusFilter);
 
-      const res = await api.get(`/users?${params.toString()}`);
+      const endpoint = isStaffView ? '/admin/staff' : (isCustomerView ? '/customers' : '/users');
+      const res = await api.get(`${endpoint}?${params.toString()}`);
       setUsers(res.data || []);
-      setPagination(res.meta);
+      setPagination(res.meta || res.pagination);
     } catch (err) {
       error(err.message || 'Failed to fetch users');
     } finally {
@@ -56,170 +66,232 @@ const UserList = ({ roleFilter: initialRoleFilter = '' }) => {
     fetchUsers();
   };
 
-  const handleToggleStatus = async (user) => {
+  const handleConfirmToggleStatus = async () => {
+    if (!selectedUserForStatus) return;
+    const user = selectedUserForStatus;
+
     if (user.id === currentUser.id && user.isActive) {
       error('You cannot deactivate your own administrative account');
+      setSelectedUserForStatus(null);
       return;
     }
 
     try {
+      setStatusLoading(true);
       const nextStatus = !user.isActive;
-      await api.patch(`/users/${user.id}/status`, { isActive: nextStatus });
+      const statusEndpoint = isStaffView ? `/admin/staff/${user.id}/status` : (isCustomerView ? `/customers/${user.id}/status` : `/users/${user.id}/status`);
+      await api.patch(statusEndpoint, { isActive: nextStatus });
       success(`User ${user.firstName} ${user.lastName} has been ${nextStatus ? 'activated' : 'deactivated'}`);
+      setSelectedUserForStatus(null);
       fetchUsers();
     } catch (err) {
       error(err.message || 'Failed to update user status');
+    } finally {
+      setStatusLoading(false);
     }
   };
 
+  const pageTitle = isStaffView
+    ? 'Staff Management'
+    : (isCustomerView ? 'Customer Management' : 'User Directory');
+
+  const pageSubtitle = isStaffView
+    ? 'Create, manage, and configure staff team members and permissions'
+    : (isCustomerView ? 'Directory of active and registered customer accounts' : 'System users, staff members, and administrators');
+
+  const breadcrumbs = isStaffView
+    ? [{ label: 'Admin', to: '/admin/dashboard' }, { label: 'Staff Management' }]
+    : (isCustomerView ? [{ label: 'Workspace', to: '/customers' }, { label: 'Customers' }] : [{ label: 'Directory' }]);
+
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>User Management</h2>
-          <p>Directory of registered customers, staff members, and system administrators</p>
-        </div>
-        {isAdmin && (
-          <button className="btn btn-primary" onClick={() => setIsStaffModalOpen(true)}>
-            + Create Staff Account
-          </button>
+      <PageHeader
+        title={pageTitle}
+        subtitle={pageSubtitle}
+        breadcrumbs={breadcrumbs}
+        actions={
+          (isAdmin && (isStaffView || !isCustomerView)) ? (
+            <Button variant="primary" onClick={() => setIsStaffModalOpen(true)}>
+              + Create Staff Account
+            </Button>
+          ) : null
+        }
+      />
+
+      {/* Filter and Search Bar */}
+      <Card style={{ marginBottom: '20px' }}>
+        <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ flex: 1, minWidth: '220px' }}>
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Search by name, email, or phone..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
+          {!isStaffView && !isCustomerView && (
+            <select
+              className="form-control"
+              style={{ width: 'auto' }}
+              value={roleFilter}
+              onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
+            >
+              <option value="">All Roles</option>
+              <option value="CUSTOMER">Customers</option>
+              <option value="STAFF">Staff</option>
+              {isAdmin && <option value="ADMIN">Admins</option>}
+            </select>
+          )}
+
+          <select
+            className="form-control"
+            style={{ width: 'auto' }}
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+          >
+            <option value="">All Statuses</option>
+            <option value="true">Active Only</option>
+            <option value="false">Deactivated Only</option>
+          </select>
+
+          <Button type="submit" variant="secondary">
+            Search
+          </Button>
+
+          {(search || (roleFilter !== initialRoleFilter) || statusFilter !== '') && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setSearch('');
+                setRoleFilter(initialRoleFilter);
+                setStatusFilter('');
+                setPage(1);
+              }}
+            >
+              Reset
+            </Button>
+          )}
+        </form>
+      </Card>
+
+      {/* Table Content */}
+      <div className="table-container">
+        {loading ? (
+          <div style={{ padding: '40px', textAlign: 'center' }}>
+            <LoadingSpinner text="Loading records..." />
+          </div>
+        ) : users.length === 0 ? (
+          <EmptyState
+            title={`No ${isStaffView ? 'staff' : (isCustomerView ? 'customers' : 'users')} found`}
+            message="No user records matched your criteria or filter parameters."
+            action={
+              (isAdmin && isStaffView) ? (
+                <Button size="sm" onClick={() => setIsStaffModalOpen(true)}>
+                  Create Staff Account
+                </Button>
+              ) : null
+            }
+          />
+        ) : (
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>User Details</th>
+                <th>Role</th>
+                <th>Contact</th>
+                <th>Account Status</th>
+                <th>Created</th>
+                {isAdmin && <th style={{ textAlign: 'right' }}>Actions</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((u) => {
+                const isSelf = u.id === currentUser?.id;
+                return (
+                  <tr key={u.id}>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div className="avatar-circle">
+                          {`${u.firstName?.[0] || ''}${u.lastName?.[0] || ''}`.toUpperCase()}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>
+                            {u.firstName} {u.lastName} {isSelf && '(You)'}
+                          </div>
+                          <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+                            {u.email}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <Badge status={u.role} />
+                    </td>
+                    <td style={{ fontSize: '13px' }}>
+                      {u.phone || <span style={{ color: 'var(--color-text-muted)' }}>None</span>}
+                    </td>
+                    <td>
+                      <Badge status={u.isActive ? 'ACTIVE' : 'INACTIVE'} />
+                    </td>
+                    <td style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>
+                      {new Date(u.createdAt).toLocaleDateString()}
+                    </td>
+                    {isAdmin && (
+                      <td style={{ textAlign: 'right' }}>
+                        <Button
+                          variant={u.isActive ? 'danger' : 'success'}
+                          size="sm"
+                          disabled={isSelf}
+                          onClick={() => setSelectedUserForStatus(u)}
+                          title={isSelf ? 'Cannot deactivate self' : ''}
+                        >
+                          {u.isActive ? 'Deactivate' : 'Activate'}
+                        </Button>
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         )}
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="card">
-        <div className="card-body">
-          <form onSubmit={handleSearchSubmit} className="action-bar" style={{ margin: 0 }}>
-            <div className="filter-group">
-              <div className="search-input-wrapper">
-                <span className="search-icon">🔍</span>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Search name, email, or phone..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
-
-              <select
-                className="form-select"
-                style={{ width: 'auto' }}
-                value={roleFilter}
-                onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
-              >
-                <option value="">All Roles</option>
-                <option value="CUSTOMER">Customers</option>
-                <option value="STAFF">Staff</option>
-                {isAdmin && <option value="ADMIN">Admins</option>}
-              </select>
-
-              <select
-                className="form-select"
-                style={{ width: 'auto' }}
-                value={statusFilter}
-                onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-              >
-                <option value="">All Statuses</option>
-                <option value="true">Active Only</option>
-                <option value="false">Deactivated Only</option>
-              </select>
-
-              <button type="submit" className="btn btn-secondary">
-                Search
-              </button>
-            </div>
-          </form>
+      {pagination && pagination.totalPages > 1 && (
+        <div style={{ marginTop: '20px' }}>
+          <Pagination
+            currentPage={pagination.page || page}
+            totalPages={pagination.totalPages}
+            onPageChange={(p) => setPage(p)}
+          />
         </div>
-      </div>
+      )}
 
-      {/* Table */}
-      <div className="card">
-        <div className="card-body" style={{ padding: 0 }}>
-          {loading ? (
-            <LoadingSpinner text="Loading users..." />
-          ) : users.length > 0 ? (
-            <div className="table-responsive">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>User</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Joined</th>
-                    {isAdmin && <th>Actions</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((u) => (
-                    <tr key={u.id}>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                          <div
-                            style={{
-                              width: '32px',
-                              height: '32px',
-                              borderRadius: '50%',
-                              background: '#ede9fe',
-                              color: '#6d28d9',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontWeight: 700,
-                              fontSize: '0.8rem'
-                            }}
-                          >
-                            {u.firstName?.charAt(0) || 'U'}
-                          </div>
-                          <span style={{ fontWeight: 600 }}>{u.firstName} {u.lastName}</span>
-                        </div>
-                      </td>
-                      <td>{u.email}</td>
-                      <td>{u.phone || '—'}</td>
-                      <td><Badge text={u.role} /></td>
-                      <td>
-                        <span className={`badge ${u.isActive ? 'badge-active' : 'badge-closed'}`}>
-                          {u.isActive ? 'Active' : 'Deactivated'}
-                        </span>
-                      </td>
-                      <td style={{ fontSize: '0.85rem', color: '#64748b' }}>
-                        {new Date(u.createdAt).toLocaleDateString()}
-                      </td>
-                      {isAdmin && (
-                        <td>
-                          {u.id !== currentUser.id && (
-                            <button
-                              className={`btn btn-sm ${u.isActive ? 'btn-danger' : 'btn-success'}`}
-                              onClick={() => handleToggleStatus(u)}
-                            >
-                              {u.isActive ? 'Deactivate' : 'Activate'}
-                            </button>
-                          )}
-                        </td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <EmptyState
-              title="No users found"
-              description="No users matched your current search criteria or role filters."
-            />
-          )}
+      {/* Create Staff Modal */}
+      {isStaffModalOpen && (
+        <CreateStaffModal
+          isOpen={isStaffModalOpen}
+          onClose={() => setIsStaffModalOpen(false)}
+          onCreated={fetchUsers}
+        />
+      )}
 
-          <Pagination pagination={pagination} onPageChange={setPage} />
-        </div>
-      </div>
-
-      <CreateStaffModal
-        isOpen={isStaffModalOpen}
-        onClose={() => setIsStaffModalOpen(false)}
-        onCreated={() => { setPage(1); fetchUsers(); }}
-      />
+      {/* Confirmation Dialog for Status Change */}
+      {selectedUserForStatus && (
+        <ConfirmationDialog
+          isOpen={!!selectedUserForStatus}
+          onClose={() => setSelectedUserForStatus(null)}
+          onConfirm={handleConfirmToggleStatus}
+          danger={selectedUserForStatus.isActive}
+          loading={statusLoading}
+          title={`${selectedUserForStatus.isActive ? 'Deactivate' : 'Activate'} Account`}
+          message={`Are you sure you want to ${selectedUserForStatus.isActive ? 'deactivate' : 'activate'} the account for ${selectedUserForStatus.firstName} ${selectedUserForStatus.lastName} (${selectedUserForStatus.email})? ${selectedUserForStatus.isActive ? 'They will no longer be able to log in.' : 'They will regain access immediately.'}`}
+          confirmText={selectedUserForStatus.isActive ? 'Deactivate Account' : 'Activate Account'}
+        />
+      )}
     </div>
   );
 };
