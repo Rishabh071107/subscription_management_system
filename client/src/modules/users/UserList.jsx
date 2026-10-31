@@ -8,14 +8,14 @@ import EmptyState from '../../components/EmptyState.jsx';
 import CreateStaffModal from './CreateStaffModal.jsx';
 import { useNotification } from '../../context/NotificationContext.jsx';
 
-const UserList = () => {
+const UserList = ({ roleFilter: initialRoleFilter = '' }) => {
   const [users, setUsers] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Filters
   const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('');
+  const [roleFilter, setRoleFilter] = useState(initialRoleFilter);
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
 

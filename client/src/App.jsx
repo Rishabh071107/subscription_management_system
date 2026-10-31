@@ -8,12 +8,28 @@ import PublicLayout from './layouts/PublicLayout.jsx';
 import InternalLayout from './layouts/InternalLayout.jsx';
 import CustomerPortalLayout from './layouts/CustomerPortalLayout.jsx';
 
+// Route Guards
+import PublicOnlyRoute from './routes/PublicOnlyRoute.jsx';
+import AdminRoute from './routes/AdminRoute.jsx';
+import InternalRoute from './routes/InternalRoute.jsx';
+import CustomerPortalRoute from './routes/CustomerPortalRoute.jsx';
+
 // Auth Pages
 import Login from './modules/auth/Login.jsx';
 import Register from './modules/auth/Register.jsx';
 import ForgotPassword from './modules/auth/ForgotPassword.jsx';
 import ResetPassword from './modules/auth/ResetPassword.jsx';
 import AccessDenied from './modules/auth/AccessDenied.jsx';
+
+// Internal / Admin Pages
+import AdminDashboard from './modules/dashboard/AdminDashboard.jsx';
+import UserList from './modules/users/UserList.jsx';
+import ProfilePage from './modules/profile/ProfilePage.jsx';
+import SettingsPage from './modules/settings/SettingsPage.jsx';
+
+// Customer Portal Pages
+import CustomerDashboard from './modules/dashboard/CustomerDashboard.jsx';
+import PortalProfilePage from './modules/portal/PortalProfilePage.jsx';
 
 export default function App() {
   return (
@@ -25,19 +41,47 @@ export default function App() {
             <Route path="/" element={<Navigate to="/login" replace />} />
 
             {/* Public Auth Routes */}
+            <Route element={<PublicOnlyRoute />}>
+              <Route element={<PublicLayout />}>
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Register />} />
+                <Route path="/register" element={<Navigate to="/signup" replace />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+              </Route>
+            </Route>
+
+            {/* Access Denied (Standalone public layout) */}
             <Route element={<PublicLayout />}>
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Register />} />
-              <Route path="/register" element={<Navigate to="/signup" replace />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/403" element={<AccessDenied />} />
             </Route>
 
-            {/* Placeholder fallbacks for internal & portal to be hooked up in Phase 00D/00E */}
-            <Route path="/admin/*" element={<Navigate to="/login" replace />} />
-            <Route path="/portal/*" element={<Navigate to="/login" replace />} />
+            {/* Admin-Only Routes */}
+            <Route element={<AdminRoute />}>
+              <Route element={<InternalLayout />}>
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/staff" element={<UserList roleFilter="STAFF" />} />
+                <Route path="/settings" element={<SettingsPage />} />
+              </Route>
+            </Route>
 
+            {/* Internal Routes (Admin & Staff) */}
+            <Route element={<InternalRoute />}>
+              <Route element={<InternalLayout />}>
+                <Route path="/customers" element={<UserList roleFilter="CUSTOMER" />} />
+                <Route path="/profile" element={<ProfilePage />} />
+              </Route>
+            </Route>
+
+            {/* Customer Portal Routes (Customer Only) */}
+            <Route element={<CustomerPortalRoute />}>
+              <Route element={<CustomerPortalLayout />}>
+                <Route path="/portal/dashboard" element={<CustomerDashboard />} />
+                <Route path="/portal/profile" element={<PortalProfilePage />} />
+              </Route>
+            </Route>
+
+            {/* Catch-all */}
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         </NotificationProvider>
