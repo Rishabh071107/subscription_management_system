@@ -23,6 +23,7 @@ export default function Sidebar({
       </div>
 
       <nav className="internal-sidebar-nav">
+
         {/* Overview */}
         <div className="internal-nav-section-title">Overview</div>
         {isAdmin && (
@@ -35,6 +36,28 @@ export default function Sidebar({
             <span className="nav-icon">📊</span>
             <span>Admin Dashboard</span>
           </NavLink>
+        )}
+        {(isAdmin || isStaff) && (
+          <>
+            <NavLink
+              to="/dashboard"
+              className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
+              onClick={onClose}
+              title="Dashboard"
+            >
+              <span className="nav-icon">🏠</span>
+              <span>Dashboard</span>
+            </NavLink>
+            <NavLink
+              to="/reports"
+              className={({ isActive }) => `internal-nav-link ${isActive ? 'active' : ''}`}
+              onClick={onClose}
+              title="Reports & Analytics"
+            >
+              <span className="nav-icon">📈</span>
+              <span>Reports & Analytics</span>
+            </NavLink>
+          </>
         )}
 
         {/* Catalog & Subscriptions */}
@@ -96,7 +119,6 @@ export default function Sidebar({
             <span>Staff Management</span>
           </NavLink>
         )}
-
         {(isAdmin || isStaff) && (
           <NavLink
             to="/customers"
@@ -122,7 +144,6 @@ export default function Sidebar({
             <span>Recurring Billing</span>
           </NavLink>
         )}
-
         {(isAdmin || isStaff) && (
           <>
             <NavLink
@@ -168,7 +189,6 @@ export default function Sidebar({
           <span className="nav-icon">👤</span>
           <span>My Profile</span>
         </NavLink>
-
         {isAdmin && (
           <NavLink
             to="/settings"
@@ -180,6 +200,7 @@ export default function Sidebar({
             <span>System Settings</span>
           </NavLink>
         )}
+
       </nav>
     </aside>
   );

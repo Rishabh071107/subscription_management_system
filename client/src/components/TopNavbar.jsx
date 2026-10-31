@@ -59,6 +59,10 @@ export default function TopNavbar({
                 <span>Dashboard</span>
               </NavLink>
             )}
+            <NavLink to="/reports" style={linkStyle}>
+              <span className="nav-icon">📈</span>
+              <span>Reports</span>
+            </NavLink>
             <NavLink to="/products" style={linkStyle}>
               <span className="nav-icon">📦</span>
               <span>Products</span>

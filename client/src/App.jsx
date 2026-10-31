@@ -23,6 +23,9 @@ import AccessDenied from './modules/auth/AccessDenied.jsx';
 
 // Internal / Admin Pages
 import AdminDashboard from './modules/dashboard/AdminDashboard.jsx';
+import StaffDashboard from './modules/dashboard/StaffDashboard.jsx';
+import DashboardRouter from './modules/dashboard/DashboardRouter.jsx';
+import ReportsView from './modules/dashboard/ReportsView.jsx';
 import UserList from './modules/users/UserList.jsx';
 import ProfilePage from './modules/profile/ProfilePage.jsx';
 import SettingsPage from './modules/settings/SettingsPage.jsx';
@@ -81,16 +84,34 @@ export default function App() {
             {/* Internal Routes (Admin & Staff) */}
             <Route element={<InternalRoute />}>
               <Route element={<InternalLayout />}>
+                {/* Dashboard & Reports (Phase 8) */}
+                <Route path="/dashboard" element={<DashboardRouter />} />
+                <Route path="/staff/dashboard" element={<StaffDashboard />} />
+                <Route path="/reports" element={<ReportsView />} />
+
+                {/* Catalog */}
                 <Route path="/products" element={<ProductList />} />
                 <Route path="/plans" element={<PlanList />} />
+
+                {/* Subscriptions */}
                 <Route path="/subscriptions" element={<SubscriptionList />} />
                 <Route path="/subscriptions/:id" element={<SubscriptionDetail />} />
+
+                {/* Quotations */}
                 <Route path="/quotations" element={<QuotationList />} />
+
+                {/* Customers */}
                 <Route path="/customers" element={<UserList roleFilter="CUSTOMER" />} />
+
+                {/* Invoices */}
                 <Route path="/invoices" element={<InvoiceList />} />
                 <Route path="/invoices/:id" element={<InvoiceDetail />} />
+
+                {/* Payments & Collections */}
                 <Route path="/payments" element={<PaymentList />} />
                 <Route path="/overdue" element={<OverdueList />} />
+
+                {/* Profile */}
                 <Route path="/profile" element={<ProfilePage />} />
               </Route>
             </Route>

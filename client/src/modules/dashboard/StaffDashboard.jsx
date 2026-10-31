@@ -105,7 +105,7 @@ const StaffDashboard = () => {
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               <Link to="/quotations" className="btn btn-secondary btn-sm">Quotations</Link>
               <Link to="/subscriptions" className="btn btn-secondary btn-sm">Subscriptions</Link>
-              <Link to="/users" className="btn btn-secondary btn-sm">Customer Directory</Link>
+              <Link to="/customers" className="btn btn-secondary btn-sm">Customer Directory</Link>
             </div>
           </div>
         </div>
