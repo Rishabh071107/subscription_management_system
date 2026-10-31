@@ -1,0 +1,254 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '../../services/api.js';
+import { useAuth } from '../../context/AuthContext.jsx';
+import LoadingSpinner from '../../components/LoadingSpinner.jsx';
+import Badge from '../../components/Badge.jsx';
+import Pagination from '../../components/Pagination.jsx';
+import EmptyState from '../../components/EmptyState.jsx';
+import PlanFormModal from './PlanFormModal.jsx';
+import { useNotification } from '../../context/NotificationContext.jsx';
+
+const PlanList = () => {
+  const [plans, setPlans] = useState([]);
+  const [pagination, setPagination] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Filters
+  const [intervalFilter, setIntervalFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [page, setPage] = useState(1);
+
+  // Modal
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [planToEdit, setPlanToEdit] = useState(null);
+
+  const { isAdmin, isStaff, isCustomer } = useAuth();
+  const { success, error } = useNotification();
+  const navigate = useNavigate();
+
+  const fetchPlans = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '10'
+      });
+      if (intervalFilter) params.append('billingInterval', intervalFilter);
+      if (statusFilter) params.append('status', statusFilter);
+
+      const res = await api.get(`/plans?${params.toString()}`);
+      setPlans(res.data || []);
+      setPagination(res.meta);
+    } catch (err) {
+      error(err.message || 'Failed to fetch plans');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPlans();
+  }, [page, intervalFilter, statusFilter]);
+
+  const handleStatusAction = async (plan, action) => {
+    try {
+      const res = await api.patch(`/plans/${plan.id}/status`, { action });
+      success(res.message || `Plan ${action.toLowerCase()}d successfully`);
+      fetchPlans();
+    } catch (err) {
+      error(err.message || `Failed to ${action.toLowerCase()} plan`);
+    }
+  };
+
+  const handleOpenCreate = () => {
+    setPlanToEdit(null);
+    setIsFormModalOpen(true);
+  };
+
+  const handleOpenEdit = (plan) => {
+    setPlanToEdit(plan);
+    setIsFormModalOpen(true);
+  };
+
+  const handleCustomerSubscribe = (plan) => {
+    navigate('/quotations', { state: { preselectedPlanId: plan.id } });
+  };
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Subscription Plans & Billing Schedules</h2>
+          <p>Multi-cycle billing tiers: Daily on-demand, Weekly sprints, Monthly standard, and Annual commitments</p>
+        </div>
+        {(isAdmin || isStaff) && (
+          <button className="btn btn-primary" onClick={handleOpenCreate}>
+            + Create Plan
+          </button>
+        )}
+      </div>
+
+      <div className="card">
+        <div className="card-body">
+          <div className="action-bar" style={{ margin: 0 }}>
+            <div className="filter-group">
+              <select
+                className="form-select"
+                style={{ width: 'auto' }}
+                value={intervalFilter}
+                onChange={(e) => { setIntervalFilter(e.target.value); setPage(1); }}
+              >
+                <option value="">All Intervals</option>
+                <option value="DAILY">Daily</option>
+                <option value="WEEKLY">Weekly</option>
+                <option value="MONTHLY">Monthly</option>
+                <option value="YEARLY">Yearly</option>
+              </select>
+
+              {!isCustomer && (
+                <select
+                  className="form-select"
+                  style={{ width: 'auto' }}
+                  value={statusFilter}
+                  onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+                >
+                  <option value="">All Statuses</option>
+                  <option value="ACTIVE">Active</option>
+                  <option value="PAUSED">Paused</option>
+                  <option value="CLOSED">Closed</option>
+                </select>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {loading ? (
+        <LoadingSpinner text="Loading plans..." />
+      ) : plans.length > 0 ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+          {plans.map((plan) => (
+            <div
+              key={plan.id}
+              className="card"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                borderTop: '4px solid #7c3aed'
+              }}
+            >
+              <div className="card-body">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                  <div>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>{plan.name}</h3>
+                    <code style={{ fontSize: '0.75rem', color: '#7c3aed' }}>{plan.code}</code>
+                  </div>
+                  <Badge status={plan.status} />
+                </div>
+
+                <div style={{ margin: '1.25rem 0' }}>
+                  <span style={{ fontSize: '2.25rem', fontWeight: 800, color: '#0f172a' }}>
+                    ${Number(plan.price).toFixed(2)}
+                  </span>
+                  <span style={{ color: '#64748b', fontSize: '0.9rem', marginLeft: '0.25rem' }}>
+                    / {plan.billingInterval.toLowerCase()}
+                  </span>
+                </div>
+
+                {plan.description && (
+                  <p style={{ fontSize: '0.875rem', marginBottom: '1rem', color: '#475569' }}>
+                    {plan.description}
+                  </p>
+                )}
+
+                <div style={{ fontSize: '0.8rem', color: '#64748b', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  <span>Min Quantity: <strong>{plan.minQuantity}</strong></span>
+                  <span>Available From: <strong>{new Date(plan.availabilityStartDate).toLocaleDateString()}</strong></span>
+                  {plan.availabilityEndDate && (
+                    <span>Expires On: <strong>{new Date(plan.availabilityEndDate).toLocaleDateString()}</strong></span>
+                  )}
+                  <span>Active Subscribers: <strong>{plan._count?.subscriptions || 0}</strong></span>
+                </div>
+              </div>
+
+              <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid #e2e8f0', background: '#fdfcff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                {isCustomer ? (
+                  <button
+                    className="btn btn-primary"
+                    style={{ width: '100%' }}
+                    onClick={() => handleCustomerSubscribe(plan)}
+                  >
+                    Select & Request Quote
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      className="btn btn-outline btn-sm"
+                      onClick={() => handleOpenEdit(plan)}
+                    >
+                      Edit
+                    </button>
+                    <div style={{ display: 'flex', gap: '0.4rem' }}>
+                      {plan.status === 'ACTIVE' && (
+                        <button
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => handleStatusAction(plan, 'PAUSE')}
+                        >
+                          Pause
+                        </button>
+                      )}
+                      {plan.status === 'PAUSED' && (
+                        <button
+                          className="btn btn-success btn-sm"
+                          onClick={() => handleStatusAction(plan, 'RESUME')}
+                        >
+                          Resume
+                        </button>
+                      )}
+                      {plan.status !== 'CLOSED' && (
+                        <button
+                          className="btn btn-danger btn-sm"
+                          onClick={() => handleStatusAction(plan, 'CLOSE')}
+                        >
+                          Close
+                        </button>
+                      )}
+                      {plan.status === 'CLOSED' && (
+                        <button
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => handleStatusAction(plan, 'RENEW')}
+                        >
+                          Reopen
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          title="No subscription plans found"
+          description="Try adjusting your interval or status filters."
+          actionText={isAdmin ? "+ Create First Plan" : null}
+          onAction={isAdmin ? handleOpenCreate : null}
+        />
+      )}
+
+      <Pagination pagination={pagination} onPageChange={setPage} />
+
+      <PlanFormModal
+        isOpen={isFormModalOpen}
+        onClose={() => setIsFormModalOpen(false)}
+        onSaved={() => { setPage(1); fetchPlans(); }}
+        planToEdit={planToEdit}
+      />
+    </div>
+  );
+};
+
+export default PlanList;
